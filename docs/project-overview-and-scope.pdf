@@ -1,0 +1,116 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Oblique >>
+endobj
+4 0 obj
+<< /Length 3723 >>
+stream
+0.94 0.97 1 rg 0 760 612 32 re f
+0.12 0.17 0.25 RG 54 748 m 558 748 l S
+0.75 0.80 0.87 RG 54 46 m 558 46 l S
+BT /F3 9 Tf 0.39 0.46 0.56 rg 54 28 Td (CloudSec LLM Triage Bot - Resumen del Proyecto) Tj ET
+BT /F3 9 Tf 0.39 0.46 0.56 rg 500 28 Td (Pagina 1 de 2) Tj ET
+BT /F2 22 Tf 0.08 0.10 0.16 rg 54 720 Td (CloudSec LLM Triage Bot) Tj ET
+BT /F2 14 Tf 0.08 0.10 0.16 rg 54 674 Td (Idea Principal del Proyecto) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 640 Td (CloudSec LLM Triage Bot es una solucion serverless orientada a mejorar el triage) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 622 Td (de hallazgos de seguridad en AWS. El proyecto recibe findings generados por Amazon) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 604 Td (GuardDuty y Amazon Inspector, los procesa mediante una AWS Lambda y utiliza un) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 586 Td (Large Language Model para enriquecer el analisis tecnico con una interpretacion) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 568 Td (estructurada del riesgo, contexto e indicadores relevantes.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 540 Td (La propuesta del proyecto no consiste en delegar decisiones criticas al modelo. El) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 522 Td (LLM actua como analista asistente: resume, clasifica y recomienda. La decision) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 504 Td (final siempre pasa por un policy engine deterministico que aplica reglas de) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 486 Td (seguridad explicitas y bloquea acciones peligrosas, especialmente cualquier) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 468 Td (intento de supresion automatica sobre findings de alto riesgo, entornos) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 450 Td (productivos o patrones asociados con compromiso real.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 422 Td (El resultado final del proceso se distribuye a dos canales operativos clave. Por) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 404 Td (un lado, se envia un resumen accionable a Slack para notificacion rapida al equipo) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 386 Td (de seguridad. Por otro, se crea una pagina en Confluence con la trazabilidad) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 368 Td (completa del caso: resumen ejecutivo, detalle tecnico, analisis del LLM, decision) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 350 Td (final de politica, recomendacion de remediacion y finding crudo.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 322 Td (En terminos de valor, el proyecto busca reducir tiempo de analisis, mejorar) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 304 Td (consistencia en la evaluacion de findings y fortalecer la documentacion operativa,) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 286 Td (sin comprometer principios de seguridad como least privilege, segregacion de) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 268 Td (responsabilidades y control humano sobre decisiones sensibles.) Tj ET
+BT /F2 14 Tf 0.08 0.10 0.16 rg 54 234 Td (Alcance del Proyecto) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 200 Td (El alcance del proyecto cubre un flujo funcional de punta a punta dentro de AWS,) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 182 Td (desde la recepcion de findings hasta la generacion de notificaciones y) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 164 Td (documentacion. En su estado actual, el proyecto incluye:) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 136 Td (- Integracion con Amazon GuardDuty y Amazon Inspector como fuentes de) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 119 Td (  findings.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 102 Td (- Recepcion de eventos mediante Amazon EventBridge.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 85 Td (- Procesamiento centralizado con AWS Lambda en una arquitectura) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Length 2978 >>
+stream
+0.94 0.97 1 rg 0 760 612 32 re f
+0.12 0.17 0.25 RG 54 748 m 558 748 l S
+0.75 0.80 0.87 RG 54 46 m 558 46 l S
+BT /F3 9 Tf 0.39 0.46 0.56 rg 54 28 Td (CloudSec LLM Triage Bot - Resumen del Proyecto) Tj ET
+BT /F3 9 Tf 0.39 0.46 0.56 rg 500 28 Td (Pagina 2 de 2) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 720 Td (  serverless.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 703 Td (- Soporte para analisis con LLM configurable, usando OpenAI o Amazon) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 686 Td (  Bedrock.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 669 Td (- Validacion estructurada de la salida del LLM mediante modelos Pydantic.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 652 Td (- Aplicacion de reglas deterministicas de seguridad a traves de un policy) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 635 Td (  engine.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 618 Td (- Envio de notificaciones operativas a Slack.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 601 Td (- Creacion automatica de documentacion en Confluence mediante REST API.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 584 Td (- Gestion de secretos con AWS Secrets Manager.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 567 Td (- Infraestructura reproducible con Terraform.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 550 Td (- Casos de prueba, documentacion, diagrama de arquitectura y guia de demo.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 523 Td (El proyecto esta disenado como un MVP academico y tecnico, por lo que tambien) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 505 Td (define limites explicitos. Quedan fuera de alcance:) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 477 Td (- La supresion automatica real de findings en GuardDuty o Inspector.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 460 Td (- La ejecucion de acciones de contencion o remediacion automatica.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 443 Td (- La correlacion avanzada con CMDB, inventario empresarial o plataformas) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 426 Td (  SIEM.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 409 Td (- Integraciones de ticketing como Jira o ServiceNow dentro del flujo) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 392 Td (  principal.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 375 Td (- Alta disponibilidad avanzada del egress, ya que el MVP usa un unico NAT) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 68 358 Td (  Gateway por razones de costo.) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 331 Td (En resumen, el alcance del proyecto se centra en demostrar una integracion real) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 313 Td (entre servicios cloud, un LLM y herramientas de colaboracion empresarial, con una) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 295 Td (postura segura y trazable. La solucion esta pensada para mostrar viabilidad) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 277 Td (operativa, buenas practicas de diseno y una separacion clara entre recomendacion) Tj ET
+BT /F1 11 Tf 0.10 0.11 0.14 rg 54 259 Td (inteligente y decision de seguridad controlada.) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 4 0 R >>
+endobj
+7 0 obj
+<< /Type /Page /Parent 8 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> /Contents 5 0 R >>
+endobj
+8 0 obj
+<< /Type /Pages /Count 2 /Kids [6 0 R 7 0 R] >>
+endobj
+9 0 obj
+<< /Type /Catalog /Pages 8 0 R >>
+endobj
+xref
+0 10
+0000000000 65535 f 
+0000000015 00000 n 
+0000000085 00000 n 
+0000000160 00000 n 
+0000000238 00000 n 
+0000004013 00000 n 
+0000007043 00000 n 
+0000007189 00000 n 
+0000007335 00000 n 
+0000007398 00000 n 
+trailer
+<< /Size 10 /Root 9 0 R >>
+startxref
+7447
+%%EOF

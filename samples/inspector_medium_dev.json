@@ -1,0 +1,30 @@
+{
+  "version": "0",
+  "id": "evt-inspector-002",
+  "detail-type": "Inspector2 Finding",
+  "source": "aws.inspector2",
+  "account": "123456789012",
+  "time": "2026-05-20T12:15:00Z",
+  "region": "us-east-1",
+  "detail": {
+    "findingArn": "arn:aws:inspector2:us-east-1:123456789012:finding/medium-dev-001",
+    "awsAccountId": "123456789012",
+    "region": "us-east-1",
+    "severity": "MEDIUM",
+    "title": "Medium package vulnerability on development container image",
+    "description": "A medium severity package vulnerability affects a development image. The package is not directly internet exposed.",
+    "type": "Software and Configuration Checks/Package Vulnerability",
+    "resources": [
+      {
+        "id": "sha256:devimage1234567890",
+        "type": "AWS_ECR_CONTAINER_IMAGE",
+        "tags": {
+          "Environment": "dev"
+        }
+      }
+    ],
+    "packageVulnerabilityDetails": {
+      "vulnerabilityId": "CVE-2026-54321"
+    }
+  }
+}

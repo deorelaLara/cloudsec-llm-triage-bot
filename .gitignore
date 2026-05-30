@@ -1,0 +1,17 @@
+.DS_Store
+.pytest_cache/
+.venv/
+__pycache__/
+*.pyc
+
+package/
+cloudsec-llm-triage-bot-lambda.zip
+cloudsec-llm-triage-bot-lambda\ 2.zip
+runtime-requirements.txt
+
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/terraform.tfvars
+terraform/.terraform.tfstate.lock*.info
+terraform/

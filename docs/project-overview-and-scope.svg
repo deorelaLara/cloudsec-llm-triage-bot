@@ -1,0 +1,46 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='612' height='792' viewBox='0 0 612 792'>
+<rect width='100%' height='100%' fill='#ffffff'/>
+<rect x='0' y='0' width='100%' height='18' fill='#0f172a'/>
+<line x1='54' y1='126' x2='558' y2='126' stroke='#cbd5e1' stroke-width='1'/>
+<text x='54' y='92' font-family='Helvetica, Arial, sans-serif' font-size='24' font-weight='700' fill='#0f172a'>CloudSec LLM Triage Bot</text>
+<text x='54' y='126' font-family='Helvetica, Arial, sans-serif' font-size='12' fill='#475569'>Idea principal del proyecto y alcance funcional</text>
+<text x='54' y='160' font-family='Helvetica, Arial, sans-serif' font-size='14' font-weight='700' fill='#0f172a'>Idea Principal del Proyecto</text>
+<text x='54' y='184' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>CloudSec LLM Triage Bot es una solucion serverless para mejorar el triage de hallazgos</text>
+<text x='54' y='202' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>de seguridad en AWS. El sistema recibe findings de Amazon GuardDuty y Amazon Inspector</text>
+<text x='54' y='220' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>a traves de EventBridge, los procesa con AWS Lambda y utiliza un LLM para enriquecer</text>
+<text x='54' y='238' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>el analisis con contexto, clasificacion e indicadores relevantes.</text>
+<text x='54' y='256' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>El principio central del proyecto es separar recomendacion y decision. El LLM actua</text>
+<text x='54' y='274' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>como analista asistente: resume, prioriza y propone acciones. Sin embargo, la decision</text>
+<text x='54' y='292' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>final nunca queda en manos del modelo. Un policy engine deterministico aplica reglas</text>
+<text x='54' y='310' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>explicitas de seguridad y bloquea cualquier accion riesgosa o una supresion automatica</text>
+<text x='54' y='328' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>inadecuada.</text>
+<text x='54' y='346' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>Una vez tomada la decision final, el resultado se distribuye a dos canales operativos.</text>
+<text x='54' y='364' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>Slack recibe una alerta resumida para respuesta rapida del equipo de seguridad,</text>
+<text x='54' y='382' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>mientras que Confluence conserva la documentacion completa del caso con resumen</text>
+<text x='54' y='400' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>ejecutivo, detalle tecnico, analisis del LLM, decision de politica y finding crudo.</text>
+<text x='54' y='424' font-family='Helvetica, Arial, sans-serif' font-size='14' font-weight='700' fill='#0f172a'>Alcance del Proyecto</text>
+<text x='54' y='448' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>El alcance del MVP cubre un flujo funcional end-to-end dentro de AWS, desde la</text>
+<text x='54' y='466' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>recepcion del finding hasta la notificacion y documentacion del caso.</text>
+<text x='64' y='484' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>• Integracion con Amazon GuardDuty y Amazon Inspector como fuentes reales de</text>
+<text x='64' y='501' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>  findings.</text>
+<text x='64' y='518' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>• Recepcion de eventos por Amazon EventBridge y procesamiento centralizado con AWS</text>
+<text x='64' y='535' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>  Lambda.</text>
+<text x='64' y='552' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>• Analisis con LLM configurable usando OpenAI o Amazon Bedrock, con salida JSON</text>
+<text x='64' y='569' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>  validada por Pydantic.</text>
+<text x='64' y='586' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>• Aplicacion de reglas deterministicas mediante un policy engine antes de notificar</text>
+<text x='64' y='603' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>  o documentar.</text>
+<text x='64' y='620' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>• Notificacion operativa a Slack y creacion automatica de una pagina en Confluence.</text>
+<text x='64' y='637' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>• Gestion de secretos con AWS Secrets Manager e infraestructura reproducible con</text>
+<text x='64' y='654' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>  Terraform.</text>
+<text x='54' y='677' font-family='Helvetica, Arial, sans-serif' font-size='14' font-weight='700' fill='#0f172a'>Fuera de Alcance</text>
+<text x='64' y='701' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>• Supresion automatica real de findings en GuardDuty o Inspector.</text>
+<text x='64' y='718' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>• Remediacion o contencion automatica sobre recursos afectados.</text>
+<text x='64' y='735' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>• Correlacion avanzada con CMDB, SIEM o plataformas externas de ticketing como</text>
+<text x='64' y='752' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>  parte del flujo principal.</text>
+<text x='54' y='769' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>En resumen, el proyecto demuestra una integracion real entre servicios cloud, un LLM y</text>
+<text x='54' y='787' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>herramientas empresariales de colaboracion, manteniendo control humano y trazabilidad</text>
+<text x='54' y='805' font-family='Helvetica, Arial, sans-serif' font-size='11' fill='#111827'>sobre decisiones de seguridad sensibles.</text>
+<line x1='54' y1='748' x2='558' y2='748' stroke='#cbd5e1' stroke-width='1'/>
+<text x='54' y='768' font-family='Helvetica, Arial, sans-serif' font-size='9' fill='#64748b'>Documento de apoyo del proyecto</text>
+<text x='420' y='768' font-family='Helvetica, Arial, sans-serif' font-size='9' fill='#64748b'>CloudSec LLM Triage Bot</text>
+</svg>

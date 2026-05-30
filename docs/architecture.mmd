@@ -1,0 +1,32 @@
+flowchart LR
+    A[Amazon GuardDuty Finding]
+    B[Amazon Inspector Finding]
+    C[Amazon EventBridge]
+    D[VPC Dedicada]
+    E[3 Public Subnets]
+    F[1 NAT Gateway]
+    G[3 Private Subnets]
+    H[AWS Lambda Processor]
+    I[AWS Secrets Manager]
+    J[LLM Provider<br/>OpenAI or Bedrock]
+    K[Deterministic Policy Engine]
+    L[Slack Notification]
+    M[Confluence Documentation]
+    N[CloudWatch Logs]
+
+    A --> C
+    B --> C
+    D --> E
+    E --> F
+    F --> G
+    C --> H
+    G --> H
+    H --> I
+    H --> J
+    J --> H
+    H --> K
+    K --> L
+    K --> M
+    H --> N
+    L --> N
+    M --> N
