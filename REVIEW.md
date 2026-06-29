@@ -219,4 +219,59 @@ Hasta ahora solo probaste pegando JSON simulado en la consola Lambda. Para valid
 
 ---
 
+## Rutas y referencias que debemos manejar
+
+Mapa rápido de dónde está todo, para no perdernos.
+
+### Repo y entrega
+| Qué | Dónde |
+|-----|-------|
+| Repositorio | `deorelaLara/cloudsec-llm-triage-bot` (privado) |
+| Rama de trabajo | `review/cloudsec-triage` |
+| Documento de análisis | `REVIEW.md` (raíz del repo) |
+| Cuenta GitHub con acceso / para push | `Victorniupay` (`gh auth switch --user Victorniupay` antes de pushear) |
+| Link al review en la rama | `https://github.com/deorelaLara/cloudsec-llm-triage-bot/blob/review/cloudsec-triage/REVIEW.md` |
+
+### Estructura del código (qué tocamos)
+| Ruta | Qué es |
+|------|--------|
+| `src/handler.py` | Orquestador Lambda. B1 (manejo de errores) + dedup + wiring de enrichment/self-consistency |
+| `src/policy_engine.py` | Reglas determinísticas. B2 (keywords) + C1 (regla KEV) |
+| `src/llm_analyzer.py` | Llamada al LLM. C3 (tool-use forzado) + B4 (self-consistency) |
+| `src/enrichment.py` | **Nuevo.** C1: CISA KEV + EPSS |
+| `src/dedup.py` | **Nuevo.** B6: dedup por DynamoDB |
+| `src/confluence_client.py` | B6 (400 preciso) + render de enrichment |
+| `src/slack_notifier.py` | Render de enrichment |
+| `src/models.py` | Contratos Pydantic (`FindingEnrichment` nuevo) |
+| `tests/` | 36 tests (`python -m pytest` desde la raíz del repo) |
+| `terraform/` | Infra: VPC, NAT, EventBridge, Lambda, IAM, Secrets, **SQS DLQ**, **DynamoDB dedup** |
+| `samples/` | 5 eventos de prueba |
+
+### AWS (validación / despliegue)
+| Qué | Valor |
+|-----|-------|
+| Cuenta de pruebas | `505610408626` (perfil SSO `niupay`) — **NO usar `echo-prod` 169514776674 = producción ECHO** |
+| Login | `aws sso login --profile niupay` (start url `niupay-login.awsapps.com`) |
+| Región usada en validación | `us-east-2` |
+| Región objetivo del proyecto | `ap-southeast-2` |
+| Modelo Bedrock (us-east-2) | `us.anthropic.claude-sonnet-4-6` · objetivo (ap-southeast-2): `au.anthropic.claude-sonnet-4-6` |
+| Terraform CLI | instalado vía winget (`Hashicorp.Terraform`) — estado: `validate` OK, **NO aplicado** |
+
+### Feeds externos (C1)
+| Qué | URL |
+|-----|-----|
+| CISA KEV | `https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json` |
+| EPSS | `https://api.first.org/data/v1/epss` |
+
+### Variables de entorno nuevas (ver `.env.example` / `terraform`)
+- `LLM_SELF_CONSISTENCY_SAMPLES` (default `1` = off) — B4
+- `DEDUP_TABLE_NAME` (vacío = dedup off) · `DEDUP_TTL_SECONDS` (default `86400`) — B6
+
+### Próximos pasos pendientes (decisión de Victor)
+1. Pasar la rama `review/cloudsec-triage` a Luz (o abrir PR contra `main`).
+2. `terraform plan` contra `niupay` (gratis, read-only) para confirmar despliegue real.
+3. `terraform apply` (crea recursos; requiere construir el ZIP de la Lambda primero) — solo si se quiere un despliegue de prueba vivo.
+
+---
+
 Cualquier cosa me dices y lo vemos. Está todo verificado contra el código (las referencias `archivo:línea` apuntan al sitio exacto). 🚀
