@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from models import LLMAnalysis, NormalizedFinding
+from models import FindingEnrichment, LLMAnalysis, NormalizedFinding
 from policy_engine import evaluate_policy
 
 
@@ -133,6 +133,22 @@ def test_llm_rationale_mentioning_keyword_does_not_block() -> None:
 
     assert decision.decision == "candidate_for_suppression"
     assert "dangerous_finding_type_blocked" not in decision.reason_codes
+
+
+def test_cve_in_cisa_kev_is_never_suppressible() -> None:
+    # Even a clean low-risk, dev, allowlisted finding the LLM wants to suppress must
+    # be blocked when its CVE is on the CISA Known Exploited Vulnerabilities catalog.
+    finding = _finding("low", "dev", "Software and Configuration Checks/Package Vulnerability")
+    analysis = _analysis("low", 0.99, True)
+    enrichment = FindingEnrichment(
+        cve_id="CVE-2021-44228", in_cisa_kev=True, epss_score=0.97, source="kev_epss"
+    )
+
+    decision = evaluate_policy(finding, analysis, ALLOWLIST, enrichment)
+
+    assert decision.decision == "alert_and_document"
+    assert "cve_in_cisa_kev_blocked" in decision.reason_codes
+    assert decision.final_risk_level in {"high", "critical"}
 
 
 def test_medium_risk_finding_stays_in_manual_review() -> None:

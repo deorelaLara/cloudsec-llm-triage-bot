@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from confluence_client import ConfluenceClient
+from enrichment import enrich_finding
 from finding_normalizer import inspect_event_shape, normalize_finding_event
 from llm_analyzer import LLMAnalyzer
 from logger import get_logger, log_event
@@ -87,13 +88,17 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         bedrock_model_id=config["bedrock_model_id"],
     )
     llm_analysis = analyzer.analyze(finding, secrets)
-    decision = evaluate_policy(finding, llm_analysis, config["suppression_allowlist"])
+    # Deterministic threat-intel enrichment feeds a hard rule into the policy engine
+    # (CVE on CISA KEV -> never suppressible). Fail-open: never blocks triage.
+    enrichment = enrich_finding(finding, logger)
+    decision = evaluate_policy(finding, llm_analysis, config["suppression_allowlist"], enrichment)
 
     triage_result = TriageResult(
         finding=finding,
         llm_analysis=llm_analysis,
         policy_decision=decision,
         ingestion_metadata=ingestion_metadata,
+        enrichment=enrichment,
         execution_id=execution_id,
         processed_at=processed_at,
     )

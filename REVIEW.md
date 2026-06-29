@@ -26,10 +26,11 @@ Lo que falta es el salto de "demo con samples" a "esto no se me cae en producci�
 > - **B1** — `src/handler.py`: los errores transitorios ahora propagan (EventBridge reintenta → DLQ) y los eventos no soportados se descartan sin reintento. (+2 tests en `tests/test_handler.py`)
 > - **B2** — `src/policy_engine.py`: el match de keywords ya no usa el `rationale` del LLM, solo campos estructurados. (+1 test en `tests/test_policy_engine.py`)
 > - **C3** — `src/llm_analyzer.py`: tool-use forzado (`submit_triage`) en vez de parsear JSON del texto. Adiós a `_extract_json_document`. (+2 tests en `tests/test_llm_analyzer.py`)
+> - **C1** — `src/enrichment.py` (nuevo) + `src/policy_engine.py`: enriquecimiento determinístico CISA KEV / EPSS. Regla dura: CVE en KEV → nunca supresible, decide antes que el LLM. (+5 tests; validado contra los feeds reales — ver §4)
 > - **B6** — `src/confluence_client.py`: el retry de título único solo se dispara ante un 400 que es de verdad conflicto de título; cualquier otro 400 ya no se enmascara. (+2 tests en `tests/test_confluence_client.py`)
 > - **`terraform/`** — el módulo que faltaba, ahora incluido y **validado** (`terraform fmt`/`init`/`validate` OK con AWS provider 5.x): VPC + 3 subnets públicas/privadas + NAT + EventBridge rules (GuardDuty/Inspector) + Lambda + IAM least-priv + Secrets + **SQS DLQ** (cierra B1 a nivel infra). Ver §5.
 >
-> Suite completa: **21 tests verdes** (`python -m pytest`). C3 lo **validé contra Bedrock real** (`us.anthropic.claude-sonnet-4-6`) corriendo los 5 samples end-to-end — ver tabla en §4. El resto de las recomendaciones sigue siendo eso, recomendación.
+> Suite completa: **26 tests verdes** (`python -m pytest`). C3 validado contra **Bedrock real** (`us.anthropic.claude-sonnet-4-6`, los 5 samples — tabla en §4) y C1 contra los **feeds reales de CISA KEV + EPSS**. El resto de las recomendaciones sigue siendo eso, recomendación.
 
 ---
 
@@ -140,6 +141,9 @@ flowchart LR
 ```
 
 ### 🥇 C1 — Enriquecimiento determinístico hacia el *policy engine* (más valioso que un RAG)
+
+> **✅ Ya implementado y validado en esta rama.** Agregué `src/enrichment.py` (consulta CISA KEV + EPSS para el CVE de un finding de Inspector, con cache del catálogo y *fail-open* si los feeds no responden) y una **regla dura nueva** en `src/policy_engine.py` que corre **antes** que todo lo demás: *CVE en CISA KEV → `alert_and_document`, nunca supresible* (`reason_codes=["cve_in_cisa_kev_blocked"]`). Validado contra los feeds **reales**: `CVE-2021-44228` (Log4Shell) → `in_kev=True`, EPSS `0.99999`; un CVE inexistente → `in_kev=False`. El catálogo trae ~1600 CVEs activamente explotados. Esto es retrieval determinístico alimentando las reglas — justo lo que sigue.
+
 Antes de RAG vectorial, lo que más mueve la aguja es **retrieval estructurado que alimente las reglas**, no solo el prompt:
 - **CVEs de Inspector** → consultar **CISA KEV** (Known Exploited Vulnerabilities) y **EPSS**. Regla dura: *"CVE en KEV → nunca supresible, escalar"*. Esto mejora el triage de vulns muchísimo más que la prosa del LLM, y va en línea con tu filosofía de "las reglas deciden".
 - **GuardDuty** → reputación de IP / mapeo MITRE ATT&CK.
