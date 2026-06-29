@@ -22,11 +22,12 @@ Lo que falta es el salto de "demo con samples" a "esto no se me cae en producci�
 | 4 | Tool-use forzado / structured outputs | Mata el parsing frágil de JSON |
 | 5 | Enriquecer con CISA KEV / EPSS hacia el policy engine | El "RAG" que más valor te da |
 
-> **🛠️ Esta rama ya trae código, no solo el review.** Dejé aplicados y **validados con tests** dos fixes como propuesta concreta (revisables/cherry-pickeables):
+> **🛠️ Esta rama ya trae código, no solo el review.** Dejé aplicados y validados tres fixes como propuesta concreta (revisables/cherry-pickeables):
 > - **B1** — manejo de errores en `src/handler.py`: los errores transitorios ahora propagan (EventBridge reintenta → DLQ) y los eventos no soportados se descartan sin reintento. (+2 tests en `tests/test_handler.py`)
 > - **B2** — `src/policy_engine.py`: el match de keywords ya no usa el `rationale` del LLM, solo campos estructurados. (+1 test en `tests/test_policy_engine.py`)
+> - **C3** — `src/llm_analyzer.py`: tool-use forzado (`submit_triage`) en vez de parsear JSON del texto. Adiós a `_extract_json_document`. (+2 tests en `tests/test_llm_analyzer.py`)
 >
-> Suite completa: **17 tests verdes** (`python -m pytest`). El resto de la sección 3/4/5 sigue siendo recomendación.
+> Suite completa: **19 tests verdes** (`python -m pytest`). Y C3 lo **validé contra Bedrock real** (`us.anthropic.claude-sonnet-4-6`) corriendo los 5 samples end-to-end — ver tabla en §4. El resto de la sección 3/4/5 sigue siendo recomendación.
 
 ---
 
@@ -155,7 +156,19 @@ Hoy pides JSON y después haces *cirugía de strings* (`_extract_json_document`:
 - **OpenAI:** ya usas `response_format={"type":"json_object"}`, pero la versión fuerte es **Structured Outputs con un `json_schema`** (conformidad *garantizada*), no solo `json_object`.
 - **Bedrock (Anthropic):** forzar una **tool call** (`tool_choice` apuntando a un tool `submit_triage` cuyo `input_schema` *es* tu modelo `LLMAnalysis`). El SDK valida el esquema → adiós al parsing manual y al fallback silencioso cuando el modelo mete un campo de más. Está soportado en Bedrock.
 
-> Ojo, una cosa que verifiqué y **está bien**: `BEDROCK_MODEL_ID = au.anthropic.claude-sonnet-4-6` es correcto — en Bedrock, para `ap-southeast-2`, necesitas un *inference profile ID* (prefijo cross-region `au.`), no el model ID base. Eso ya lo tienes bien. El detalle es que vas por el camino legacy `bedrock-runtime invoke_model` con el prompt JSON a mano; migrar a tool-use forzado es la mejora de técnica que te recomiendo.
+> Ojo, una cosa que verifiqué y **está bien**: `BEDROCK_MODEL_ID = au.anthropic.claude-sonnet-4-6` es correcto — en Bedrock, para `ap-southeast-2`, necesitas un *inference profile ID* (prefijo cross-region `au.`), no el model ID base. Eso ya lo tienes bien. El detalle es que ibas por el camino legacy `bedrock-runtime invoke_model` con el prompt JSON a mano.
+
+> **✅ Ya implementado y validado en esta rama (C3).** Cambié `_invoke_bedrock`/`_invoke_openai` para forzar la tool `submit_triage` (su `input_schema` se genera del propio modelo `LLMAnalysis`, así nunca se desincronizan) y eliminé `_extract_json_document`. Lo corrí **end-to-end contra Bedrock real** (`us.anthropic.claude-sonnet-4-6`) con los 5 samples — el modelo devolvió siempre un `LLMAnalysis` válido vía `tool_use`, sin parsear texto:
+>
+> | sample | LLM risk | conf | decisión | razón |
+> |--------|----------|------|----------|-------|
+> | guardduty_high_credential_compromise | high | 0.85 | `alert_and_document` | `risk_level_blocked` |
+> | inspector_critical_cve | critical | 0.93 | `alert_and_document` | `risk_level_blocked` |
+> | guardduty_low_port_probe_dev | low | 0.72 | `manual_review` | `llm_confidence_below_threshold` |
+> | inspector_medium_dev | medium | 0.72 | `manual_review` | `llm_confidence_below_threshold` |
+> | guardduty_false_positive_sandbox | low | 0.72 | `manual_review` | `llm_confidence_below_threshold` |
+>
+> **Hallazgo real:** con el modelo de verdad, los tres casos de bajo/medio riesgo cayeron en `confidence=0.72` — justo bajo el umbral 0.80 — así que **ninguno llegó a `candidate_for_suppression`**. Confirma en vivo lo conservador del diseño y refuerza B4 (el gate de confianza auto-reportada es el que termina mandando).
 
 **Self-consistency para el problema de la confianza (B4).** En vez de creerle el número al LLM, muestrea N veces y mide el acuerdo: si cambia de `risk_level` entre corridas, *eso* es el verdadero "low confidence". Gate mucho más robusto que `confidence < 0.80`.
 
