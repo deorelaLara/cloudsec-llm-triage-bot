@@ -116,6 +116,25 @@ def test_confidence_below_threshold_forces_manual_review() -> None:
     assert "llm_confidence_below_threshold" in decision.reason_codes
 
 
+def test_llm_rationale_mentioning_keyword_does_not_block() -> None:
+    # A clean low-risk dev finding must NOT be blocked just because the LLM's
+    # free-text rationale *mentions* a dangerous keyword (here, to negate it).
+    # Only structured signals (finding fields + finding_tags) should block.
+    finding = _finding("low", "dev", "Recon:EC2/PortProbeUnprotectedPort")
+    analysis = _analysis(
+        "low",
+        0.92,
+        True,
+        rationale="This is NOT a credential compromise and there is no public exposure here.",
+        tags=[],
+    )
+
+    decision = evaluate_policy(finding, analysis, ALLOWLIST)
+
+    assert decision.decision == "candidate_for_suppression"
+    assert "dangerous_finding_type_blocked" not in decision.reason_codes
+
+
 def test_medium_risk_finding_stays_in_manual_review() -> None:
     finding = _finding("medium", "dev", "Software and Configuration Checks/Package Vulnerability")
     analysis = _analysis("medium", 0.95, True)

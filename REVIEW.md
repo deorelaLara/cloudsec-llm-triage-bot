@@ -22,6 +22,12 @@ Lo que falta es el salto de "demo con samples" a "esto no se me cae en producci�
 | 4 | Tool-use forzado / structured outputs | Mata el parsing frágil de JSON |
 | 5 | Enriquecer con CISA KEV / EPSS hacia el policy engine | El "RAG" que más valor te da |
 
+> **🛠️ Esta rama ya trae código, no solo el review.** Dejé aplicados y **validados con tests** dos fixes como propuesta concreta (revisables/cherry-pickeables):
+> - **B1** — manejo de errores en `src/handler.py`: los errores transitorios ahora propagan (EventBridge reintenta → DLQ) y los eventos no soportados se descartan sin reintento. (+2 tests en `tests/test_handler.py`)
+> - **B2** — `src/policy_engine.py`: el match de keywords ya no usa el `rationale` del LLM, solo campos estructurados. (+1 test en `tests/test_policy_engine.py`)
+>
+> Suite completa: **17 tests verdes** (`python -m pytest`). El resto de la sección 3/4/5 sigue siendo recomendación.
+
 ---
 
 ## 1. Cómo funciona hoy (para que arranquemos parejos)
