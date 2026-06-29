@@ -16,18 +16,20 @@ Lo que falta es el salto de "demo con samples" a "esto no se me cae en producci�
 
 | # | Qué | Por qué |
 |---|-----|---------|
-| 1 | Aclarar la falta de `terraform/` | Sin eso no despliegas nada → bloquea probar en producción |
+| 1 | ✅ ~~Aclarar la falta de `terraform/`~~ — **resuelto** (era el `.gitignore`) | Ya hay `terraform/` validado en esta rama |
 | 2 | DLQ + propagar errores retryables | Hoy una alerta se puede **perder en silencio** (lo más grave) |
 | 3 | Probar con `aws guardduty create-sample-findings` | Cierra tu pregunta #3 con eventos reales, sin montar un ataque |
 | 4 | Tool-use forzado / structured outputs | Mata el parsing frágil de JSON |
 | 5 | Enriquecer con CISA KEV / EPSS hacia el policy engine | El "RAG" que más valor te da |
 
-> **🛠️ Esta rama ya trae código, no solo el review.** Dejé aplicados y validados tres fixes como propuesta concreta (revisables/cherry-pickeables):
-> - **B1** — manejo de errores en `src/handler.py`: los errores transitorios ahora propagan (EventBridge reintenta → DLQ) y los eventos no soportados se descartan sin reintento. (+2 tests en `tests/test_handler.py`)
+> **🛠️ Esta rama ya trae código, no solo el review.** Dejé aplicados y validados varios fixes como propuesta concreta (revisables/cherry-pickeables):
+> - **B1** — `src/handler.py`: los errores transitorios ahora propagan (EventBridge reintenta → DLQ) y los eventos no soportados se descartan sin reintento. (+2 tests en `tests/test_handler.py`)
 > - **B2** — `src/policy_engine.py`: el match de keywords ya no usa el `rationale` del LLM, solo campos estructurados. (+1 test en `tests/test_policy_engine.py`)
 > - **C3** — `src/llm_analyzer.py`: tool-use forzado (`submit_triage`) en vez de parsear JSON del texto. Adiós a `_extract_json_document`. (+2 tests en `tests/test_llm_analyzer.py`)
+> - **B6** — `src/confluence_client.py`: el retry de título único solo se dispara ante un 400 que es de verdad conflicto de título; cualquier otro 400 ya no se enmascara. (+2 tests en `tests/test_confluence_client.py`)
+> - **`terraform/`** — el módulo que faltaba, ahora incluido y **validado** (`terraform fmt`/`init`/`validate` OK con AWS provider 5.x): VPC + 3 subnets públicas/privadas + NAT + EventBridge rules (GuardDuty/Inspector) + Lambda + IAM least-priv + Secrets + **SQS DLQ** (cierra B1 a nivel infra). Ver §5.
 >
-> Suite completa: **19 tests verdes** (`python -m pytest`). Y C3 lo **validé contra Bedrock real** (`us.anthropic.claude-sonnet-4-6`) corriendo los 5 samples end-to-end — ver tabla en §4. El resto de la sección 3/4/5 sigue siendo recomendación.
+> Suite completa: **21 tests verdes** (`python -m pytest`). C3 lo **validé contra Bedrock real** (`us.anthropic.claude-sonnet-4-6`) corriendo los 5 samples end-to-end — ver tabla en §4. El resto de las recomendaciones sigue siendo eso, recomendación.
 
 ---
 
@@ -185,7 +187,7 @@ Hoy pides JSON y después haces *cirugía de strings* (`_extract_json_document`:
 Hasta ahora solo probaste pegando JSON simulado en la consola Lambda. Para validar con eventos **nativos de AWS**:
 
 ### Bloqueantes (sí o sí)
-1. **Falta la carpeta `terraform/`.** Sin ella no despliegas nada — VPC, NAT, EventBridge rule, IAM, Secrets. Es el prerequisito #0. **Hay que aclarar si se quedó fuera del repo de entrega o nunca se escribió.**
+1. ~~**Falta la carpeta `terraform/`.**~~ **✅ Resuelto en esta rama — y encontré la causa raíz.** El `.gitignore` tenía una línea `terraform/` (en blanco) que **excluía la carpeta entera del repo** — por eso nunca apareció, existiera local o no. Quité ese blanket (dejando los ignores específicos de `terraform.tfstate`/`terraform.tfvars`/`.terraform/`) y agregué un `terraform/` completo y **validado** (`fmt`/`init`/`validate` OK): VPC, 3 subnets públicas + 3 privadas, IGW, NAT compartido, route tables, SG egress-only, Lambda en subnets privadas, EventBridge rules (GuardDuty + Inspector), Secrets Manager placeholder, IAM least-priv y **SQS DLQ** con retry (el complemento de infra de B1). Para desplegar solo falta construir el ZIP de la Lambda y crear un `terraform.tfvars` real (hay `.example`).
 2. Cargar las integraciones reales en Secrets Manager: OpenAI key **o** acceso a Bedrock habilitado en la región (Bedrock exige *grant* explícito de acceso al modelo por cuenta/región — el inference profile `au.anthropic.claude-sonnet-4-6` debe estar habilitado en `ap-southeast-2`), Slack webhook, Confluence token+space.
 3. EventBridge rule conectada a GuardDuty + Inspector → Lambda (parte del terraform que falta).
 4. GuardDuty + Inspector habilitados en la cuenta de prueba.
@@ -204,7 +206,7 @@ Hasta ahora solo probaste pegando JSON simulado en la consola Lambda. Para valid
 
 ## 6. Detalles de documentación para pulir
 
-- `docs/rubric-mapping.md:42` lista `terraform/` como evidencia de arquitectura, pero la carpeta no está en el repo.
+- `docs/rubric-mapping.md:42` lista `terraform/` como evidencia, y efectivamente faltaba en el repo. **Causa encontrada:** el `.gitignore` excluía la carpeta entera (línea `terraform/`). Ya resuelto — ver §5.
 - `docs/rubric-mapping.md` dice "Lambda privada en subnets **existentes**", mientras el README dice que Terraform **crea** una VPC dedicada con NAT propio. Son dos historias distintas de networking.
 - `docs/rubric-mapping.md:60` afirma "resultados reales observados en AWS", pero hasta ahora la validación fue con samples simulados, no con findings nativos por EventBridge. Conviene matizarlo.
 
