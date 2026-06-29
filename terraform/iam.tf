@@ -42,6 +42,12 @@ data "aws_iam_policy_document" "lambda_inline" {
     resources = [aws_sqs_queue.dlq.arn]
   }
 
+  statement {
+    sid       = "DedupTable"
+    actions   = ["dynamodb:GetItem", "dynamodb:PutItem"]
+    resources = [aws_dynamodb_table.dedup.arn]
+  }
+
   dynamic "statement" {
     for_each = var.llm_provider == "bedrock" ? [1] : []
     content {

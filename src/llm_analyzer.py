@@ -26,6 +26,7 @@ class LLMAnalyzer:
         openai_model: str | None = None,
         openai_base_url: str | None = None,
         bedrock_model_id: str | None = None,
+        self_consistency_samples: int | None = None,
     ) -> None:
         self.provider = (provider or "openai").lower()
         self.region_name = region_name
@@ -36,8 +37,52 @@ class LLMAnalyzer:
             "BEDROCK_MODEL_ID",
             "au.anthropic.claude-sonnet-4-6",
         )
+        samples = (
+            self_consistency_samples
+            if self_consistency_samples is not None
+            else int(os.getenv("LLM_SELF_CONSISTENCY_SAMPLES", "1"))
+        )
+        self.self_consistency_samples = max(1, samples)
 
     def analyze(self, finding: NormalizedFinding, secrets: IntegrationSecretBundle) -> LLMAnalysis:
+        # Self-consistency (REVIEW.md B4): the LLM's self-reported confidence is not
+        # calibrated. With samples > 1 we run the analysis N times and derive the
+        # confidence from how often the runs AGREE on the risk level — a far more
+        # robust signal for the policy engine's confidence gate. Default 1 keeps the
+        # original single-shot behaviour (and cost).
+        if self.self_consistency_samples <= 1:
+            return self._analyze_once(finding, secrets)
+
+        samples = [self._analyze_once(finding, secrets) for _ in range(self.self_consistency_samples)]
+        return self._aggregate(samples)
+
+    def _aggregate(self, samples: list[LLMAnalysis]) -> LLMAnalysis:
+        from collections import Counter
+
+        rank = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+        counts = Counter(s.risk_level for s in samples)
+        top = max(counts.values())
+        # Majority risk level; ties resolved toward the more severe one.
+        majority = max((r for r, c in counts.items() if c == top), key=lambda r: rank.get(r, 0))
+        agreement = counts[majority] / len(samples)
+        representative = next(s for s in samples if s.risk_level == majority)
+
+        return LLMAnalysis(
+            summary=representative.summary,
+            risk_level=majority,
+            confidence=round(agreement, 2),
+            rationale=(
+                f"Self-consistency over {len(samples)} samples: {agreement:.0%} agreed on "
+                f"'{majority}'. {representative.rationale}"
+            ),
+            indicators=representative.indicators,
+            recommended_action=representative.recommended_action,
+            # Conservative: only a suppression candidate if EVERY sample agreed.
+            suppression_candidate=all(s.suppression_candidate for s in samples),
+            finding_tags=representative.finding_tags,
+        )
+
+    def _analyze_once(self, finding: NormalizedFinding, secrets: IntegrationSecretBundle) -> LLMAnalysis:
         prompt = self._build_prompt(finding)
 
         try:

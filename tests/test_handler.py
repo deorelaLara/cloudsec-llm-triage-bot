@@ -45,6 +45,15 @@ def test_unsupported_event_is_dropped_not_retried() -> None:
     assert result["status"] == "ignored"
 
 
+def test_duplicate_finding_is_skipped(monkeypatch) -> None:
+    # With dedup enabled, an already-processed finding is skipped before any LLM spend.
+    monkeypatch.setenv("DEDUP_TABLE_NAME", "processed-findings")
+    with patch.object(handler, "is_duplicate", return_value=True):
+        result = handler.lambda_handler(_guardduty_event(), None)
+
+    assert result["status"] == "skipped_duplicate"
+
+
 def test_transient_downstream_error_propagates_for_retry() -> None:
     # A transient infra failure (e.g. Secrets Manager throttling) must propagate so
     # EventBridge retries and, on exhaustion, dead-letters the event — never a

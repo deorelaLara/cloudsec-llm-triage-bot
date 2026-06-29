@@ -120,3 +120,19 @@ def test_non_duplicate_400_raises_without_masking() -> None:
             client.create_page(_triage_result())
 
     assert post.call_count == 1  # no masking retry — the real error surfaces
+
+
+def test_body_includes_threat_intel_when_enriched() -> None:
+    from models import FindingEnrichment
+
+    client = _client()
+    triage = _triage_result()
+    triage.enrichment = FindingEnrichment(
+        cve_id="CVE-2021-44228", in_cisa_kev=True, epss_score=0.99999, source="kev_epss"
+    )
+
+    body = client._build_storage_html(triage)
+
+    assert "Threat Intelligence" in body
+    assert "CVE-2021-44228" in body
+    assert "YES" in body

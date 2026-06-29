@@ -133,6 +133,22 @@ class ConfluenceClient:
             "<h1>Raw Finding</h1>",
             f"<pre>{raw_finding}</pre>",
         ]
+
+        enrichment = triage_result.enrichment
+        if enrichment is not None and enrichment.cve_id:
+            epss = "%.5f" % enrichment.epss_score if enrichment.epss_score is not None else "n/a"
+            sections[-2:-2] = [
+                "<h1>Threat Intelligence</h1>",
+                (
+                    "<table>"
+                    f"<tr><td><strong>CVE</strong></td><td>{html.escape(enrichment.cve_id)}</td></tr>"
+                    "<tr><td><strong>CISA KEV (actively exploited)</strong></td>"
+                    f"<td>{'YES' if enrichment.in_cisa_kev else 'no'}</td></tr>"
+                    f"<tr><td><strong>EPSS</strong></td><td>{epss}</td></tr>"
+                    "</table>"
+                ),
+            ]
+
         return "".join(sections)
 
     def _build_payload(self, title: str, body: str) -> dict:

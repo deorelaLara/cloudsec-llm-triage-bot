@@ -70,6 +70,10 @@ resource "aws_lambda_function" "processor" {
       OPENAI_BASE_URL           = var.openai_base_url
       BEDROCK_MODEL_ID          = var.bedrock_model_id
       SUPPRESSION_ALLOWLIST     = var.suppression_allowlist
+
+      LLM_SELF_CONSISTENCY_SAMPLES = tostring(var.llm_self_consistency_samples)
+      DEDUP_TABLE_NAME             = aws_dynamodb_table.dedup.name
+      DEDUP_TTL_SECONDS            = tostring(var.dedup_ttl_seconds)
     }
   }
 

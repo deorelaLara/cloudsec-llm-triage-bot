@@ -40,6 +40,14 @@ class SlackNotifier:
                 ]
             )
 
+        enrichment = triage_result.enrichment
+        if enrichment is not None and enrichment.cve_id:
+            kev = "YES :warning:" if enrichment.in_cisa_kev else "no"
+            epss = f"{enrichment.epss_score:.2f}" if enrichment.epss_score is not None else "n/a"
+            summary_lines.append(
+                f"*CVE:* `{enrichment.cve_id}` | *CISA KEV:* {kev} | *EPSS:* {epss}"
+            )
+
         return {
             "text": f"[{decision.final_risk_level.upper()}] {finding.title} -> {decision.decision}",
             "blocks": [

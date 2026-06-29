@@ -115,3 +115,15 @@ variable "event_max_age_seconds" {
   type    = number
   default = 3600
 }
+
+variable "dedup_ttl_seconds" {
+  type        = number
+  description = "How long a processed finding is remembered for dedup. Default 1 day."
+  default     = 86400
+}
+
+variable "llm_self_consistency_samples" {
+  type        = number
+  description = "LLM samples per finding for self-consistency confidence (1 = off)."
+  default     = 1
+}

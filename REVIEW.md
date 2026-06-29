@@ -27,10 +27,13 @@ Lo que falta es el salto de "demo con samples" a "esto no se me cae en producci�
 > - **B2** — `src/policy_engine.py`: el match de keywords ya no usa el `rationale` del LLM, solo campos estructurados. (+1 test en `tests/test_policy_engine.py`)
 > - **C3** — `src/llm_analyzer.py`: tool-use forzado (`submit_triage`) en vez de parsear JSON del texto. Adiós a `_extract_json_document`. (+2 tests en `tests/test_llm_analyzer.py`)
 > - **C1** — `src/enrichment.py` (nuevo) + `src/policy_engine.py`: enriquecimiento determinístico CISA KEV / EPSS. Regla dura: CVE en KEV → nunca supresible, decide antes que el LLM. (+5 tests; validado contra los feeds reales — ver §4)
+> - **B4** — `src/llm_analyzer.py`: self-consistency opcional (`LLM_SELF_CONSISTENCY_SAMPLES`). Con N>1 muestrea N veces y la confianza sale del **acuerdo** entre corridas, no del número auto-reportado. Default 1 = comportamiento actual. (+2 tests; validado en Bedrock real)
+> - **B6 idempotencia** — `src/dedup.py` (nuevo) + `handler.py`: dedup por DynamoDB (check al inicio, marca tras éxito, fail-open) para que findings reemitidos no generen páginas/Slack duplicados. (+5 tests)
+> - **Render enrichment** — `src/slack_notifier.py` + `src/confluence_client.py`: muestran CVE / CISA KEV / EPSS cuando hay enriquecimiento. (+3 tests)
 > - **B6** — `src/confluence_client.py`: el retry de título único solo se dispara ante un 400 que es de verdad conflicto de título; cualquier otro 400 ya no se enmascara. (+2 tests en `tests/test_confluence_client.py`)
-> - **`terraform/`** — el módulo que faltaba, ahora incluido y **validado** (`terraform fmt`/`init`/`validate` OK con AWS provider 5.x): VPC + 3 subnets públicas/privadas + NAT + EventBridge rules (GuardDuty/Inspector) + Lambda + IAM least-priv + Secrets + **SQS DLQ** (cierra B1 a nivel infra). Ver §5.
+> - **`terraform/`** — el módulo que faltaba, ahora incluido y **validado** (`terraform fmt`/`init`/`validate` OK con AWS provider 5.x): VPC + 3 subnets públicas/privadas + NAT + EventBridge rules (GuardDuty/Inspector) + Lambda + IAM least-priv + Secrets + **SQS DLQ** (cierra B1) + **tabla DynamoDB de dedup**. Ver §5.
 >
-> Suite completa: **26 tests verdes** (`python -m pytest`). C3 validado contra **Bedrock real** (`us.anthropic.claude-sonnet-4-6`, los 5 samples — tabla en §4) y C1 contra los **feeds reales de CISA KEV + EPSS**. El resto de las recomendaciones sigue siendo eso, recomendación.
+> Suite completa: **36 tests verdes** (`python -m pytest`). Validado contra **infra real de tu cuenta AWS**: C3 + B4 contra Bedrock (`us.anthropic.claude-sonnet-4-6`) y C1 contra los **feeds reales de CISA KEV + EPSS**. El resto de las recomendaciones sigue siendo eso, recomendación.
 
 ---
 
@@ -115,7 +118,7 @@ Bonus de seguridad: el `raw_event` entra al prompt con campos que un atacante po
 `src/finding_normalizer.py:129` lee tags `environment`/`env`. Un recurso de **producción sin tag** queda como `unknown` → no dispara el bloqueo de producción, cae en `manual_review` (seguro, pero la protección de prod depende de que el tagging esté bien). Lo dejaría escrito como prerequisito operativo.
 
 **B6 — Idempotencia frágil en Confluence.**
-`src/confluence_client.py:48` asume que todo `400` = título duplicado y reintenta con sufijo único. Pero un `400` puede ser otra cosa (space key malo, body inválido) → el retry tapa errores reales. Y GuardDuty **reemite el mismo finding** cada cierto tiempo → **páginas duplicadas y spam en Slack** sin dedup. (Ya lo tienes en "trabajo futuro" con DynamoDB; para producción es prerequisito, no opcional.) Detalle menor: `datetime.utcnow()` (`src/confluence_client.py:79`) está deprecado en Python 3.12.
+`src/confluence_client.py:48` asume que todo `400` = título duplicado y reintenta con sufijo único. Pero un `400` puede ser otra cosa (space key malo, body inválido) → el retry tapa errores reales. Y GuardDuty **reemite el mismo finding** cada cierto tiempo → **páginas duplicadas y spam en Slack** sin dedup. **✅ Ambas partes resueltas en esta rama:** el 400 ahora solo reintenta ante un conflicto de título real, y se agregó dedup por DynamoDB (`src/dedup.py` + tabla en `terraform/`, fail-open, opcional vía `DEDUP_TABLE_NAME`). Detalle menor pendiente: `datetime.utcnow()` (`src/confluence_client.py:79`) está deprecado en Python 3.12.
 
 **B7 — Tests a medias.**
 Los 14 tests cubren `policy_engine`, `normalizer`, `models`, `confluence` — pero **no** `llm_analyzer` (justo la parte frágil, `_extract_json_document` en `src/llm_analyzer.py:131`, que limpia backticks y busca llaves, está sin test) ni el `handler`. Para "modo producción" yo metería al menos tests del parsing del LLM.
@@ -176,7 +179,7 @@ Hoy pides JSON y después haces *cirugía de strings* (`_extract_json_document`:
 >
 > **Hallazgo real:** con el modelo de verdad, los tres casos de bajo/medio riesgo cayeron en `confidence=0.72` — justo bajo el umbral 0.80 — así que **ninguno llegó a `candidate_for_suppression`**. Confirma en vivo lo conservador del diseño y refuerza B4 (el gate de confianza auto-reportada es el que termina mandando).
 
-**Self-consistency para el problema de la confianza (B4).** En vez de creerle el número al LLM, muestrea N veces y mide el acuerdo: si cambia de `risk_level` entre corridas, *eso* es el verdadero "low confidence". Gate mucho más robusto que `confidence < 0.80`.
+**Self-consistency para el problema de la confianza (B4). ✅ Implementado y validado.** En `src/llm_analyzer.py`, con `LLM_SELF_CONSISTENCY_SAMPLES>1` se muestrea N veces y la confianza sale del **acuerdo** entre corridas. Lo validé en Bedrock real con N=3 sobre el port-probe: el modelo **sí cambió de opinión** (acuerdo 2/3 → confianza 0.67 → `manual_review`), justo lo que el gate auto-reportado no capturaba. Default 1 mantiene el costo/comportamiento actual.
 
 **Few-shot en el prompt.** Hoy es zero-shot. Meter 2-3 ejemplos curados de buen triage (sobre todo casos límite) mejora consistencia y calibración. Barato y efectivo.
 
