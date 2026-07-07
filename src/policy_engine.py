@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from models import LLMAnalysis, NormalizedFinding, PolicyDecision
+from models import FindingEnrichment, LLMAnalysis, NormalizedFinding, PolicyDecision
 
 
 BLOCKED_KEYWORDS = {
@@ -20,17 +20,39 @@ def evaluate_policy(
     finding: NormalizedFinding,
     analysis: LLMAnalysis,
     allowlist: set[str],
+    enrichment: FindingEnrichment | None = None,
 ) -> PolicyDecision:
     reason_codes: list[str] = []
     final_risk_level = _max_risk(finding.severity, analysis.risk_level)
     normalized_environment = finding.environment.lower()
+
+    # Deterministic threat-intel gate (REVIEW.md C1): a CVE on CISA's Known
+    # Exploited Vulnerabilities catalog is actively exploited in the wild — it is
+    # never a suppression candidate, regardless of what the LLM thinks. This rule
+    # is fed by retrieval, not by the model, and runs first.
+    if enrichment is not None and enrichment.in_cisa_kev:
+        reason_codes.append("cve_in_cisa_kev_blocked")
+        return PolicyDecision(
+            decision="alert_and_document",
+            candidate_for_suppression=False,
+            final_risk_level=_max_risk(final_risk_level, "high"),
+            reason_codes=reason_codes,
+            recommended_action=(
+                "CVE is on the CISA Known Exploited Vulnerabilities catalog "
+                "(actively exploited). Patch/escalate immediately; suppression is forbidden."
+            ),
+        )
+    # Match dangerous-category keywords against the finding's own fields (sourced
+    # from GuardDuty/Inspector) plus the LLM's *structured* tags — a controlled
+    # signal the model has to set on purpose. We deliberately exclude the LLM's
+    # free-text `rationale` and `indicators`: prose that merely *mentions* a
+    # dangerous term (often to negate it, e.g. "this is NOT a credential
+    # compromise") was causing false blocks. See REVIEW.md section B2.
     searchable_text = " ".join(
         [
             finding.title,
             finding.description,
             finding.finding_type,
-            analysis.rationale,
-            " ".join(analysis.indicators),
             " ".join(analysis.finding_tags),
         ]
     ).lower()

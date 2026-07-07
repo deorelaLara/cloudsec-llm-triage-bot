@@ -76,6 +76,17 @@ class EventIngestionMetadata(BaseModel):
     has_eventbridge_envelope: bool = False
 
 
+class FindingEnrichment(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    cve_id: str | None = None
+    in_cisa_kev: bool = False
+    epss_score: float | None = None
+    # "kev_epss" when threat intel was looked up, "none" when not applicable,
+    # "unavailable" when the lookup failed and we degraded gracefully.
+    source: str = "none"
+
+
 class TriageResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -83,6 +94,7 @@ class TriageResult(BaseModel):
     llm_analysis: LLMAnalysis
     policy_decision: PolicyDecision
     ingestion_metadata: EventIngestionMetadata | None = None
+    enrichment: FindingEnrichment | None = None
     execution_id: str | None = None
     processed_at: str | None = None
     confluence_page_url: str | None = None

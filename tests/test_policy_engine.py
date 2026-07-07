@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from models import LLMAnalysis, NormalizedFinding
+from models import FindingEnrichment, LLMAnalysis, NormalizedFinding
 from policy_engine import evaluate_policy
 
 
@@ -114,6 +114,41 @@ def test_confidence_below_threshold_forces_manual_review() -> None:
 
     assert decision.decision == "manual_review"
     assert "llm_confidence_below_threshold" in decision.reason_codes
+
+
+def test_llm_rationale_mentioning_keyword_does_not_block() -> None:
+    # A clean low-risk dev finding must NOT be blocked just because the LLM's
+    # free-text rationale *mentions* a dangerous keyword (here, to negate it).
+    # Only structured signals (finding fields + finding_tags) should block.
+    finding = _finding("low", "dev", "Recon:EC2/PortProbeUnprotectedPort")
+    analysis = _analysis(
+        "low",
+        0.92,
+        True,
+        rationale="This is NOT a credential compromise and there is no public exposure here.",
+        tags=[],
+    )
+
+    decision = evaluate_policy(finding, analysis, ALLOWLIST)
+
+    assert decision.decision == "candidate_for_suppression"
+    assert "dangerous_finding_type_blocked" not in decision.reason_codes
+
+
+def test_cve_in_cisa_kev_is_never_suppressible() -> None:
+    # Even a clean low-risk, dev, allowlisted finding the LLM wants to suppress must
+    # be blocked when its CVE is on the CISA Known Exploited Vulnerabilities catalog.
+    finding = _finding("low", "dev", "Software and Configuration Checks/Package Vulnerability")
+    analysis = _analysis("low", 0.99, True)
+    enrichment = FindingEnrichment(
+        cve_id="CVE-2021-44228", in_cisa_kev=True, epss_score=0.97, source="kev_epss"
+    )
+
+    decision = evaluate_policy(finding, analysis, ALLOWLIST, enrichment)
+
+    assert decision.decision == "alert_and_document"
+    assert "cve_in_cisa_kev_blocked" in decision.reason_codes
+    assert decision.final_risk_level in {"high", "critical"}
 
 
 def test_medium_risk_finding_stays_in_manual_review() -> None:

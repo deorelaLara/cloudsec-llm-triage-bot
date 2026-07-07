@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 from typing import Any
 
 from confluence_client import ConfluenceClient
+from dedup import is_duplicate, mark_processed
+from enrichment import enrich_finding
 from finding_normalizer import inspect_event_shape, normalize_finding_event
 from llm_analyzer import LLMAnalyzer
 from logger import get_logger, log_event
@@ -38,87 +40,143 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
     try:
         finding = normalize_finding_event(event)
+    except ValueError as exc:
+        # Poison message: the event is not a supported GuardDuty/Inspector finding.
+        # Retrying will never succeed, so we acknowledge it (return without raising)
+        # to keep it out of the DLQ. Everything *after* normalization is allowed to
+        # propagate so transient infra failures get retried and dead-lettered
+        # instead of silently dropping a real security finding. See REVIEW.md B1.
         log_event(
             logger,
-            "info",
-            "Normalized incoming security finding.",
+            "error",
+            "Unsupported or malformed event; dropping without retry.",
             event_id=ingestion_metadata.event_id,
             event_shape=ingestion_metadata.event_shape,
-            finding_id=finding.finding_id,
-            finding_source=finding.source,
-            severity=finding.severity,
-            finding_type=finding.finding_type,
-            environment=finding.environment,
-            resource_id=finding.resource_id,
+            error=str(exc),
         )
-        secrets = load_integration_secrets(config["secret_name"], config["aws_region"], logger)
-
-        analyzer = LLMAnalyzer(
-            provider=config["llm_provider"],
-            region_name=config["aws_region"],
-            logger=logger,
-            openai_model=config["openai_model"],
-            openai_base_url=config["openai_base_url"],
-            bedrock_model_id=config["bedrock_model_id"],
-        )
-        llm_analysis = analyzer.analyze(finding, secrets)
-        decision = evaluate_policy(finding, llm_analysis, config["suppression_allowlist"])
-
-        triage_result = TriageResult(
-            finding=finding,
-            llm_analysis=llm_analysis,
-            policy_decision=decision,
-            ingestion_metadata=ingestion_metadata,
-            execution_id=execution_id,
-            processed_at=processed_at,
-        )
-
-        confluence_client = ConfluenceClient(
-            base_url=secrets.confluence_base_url,
-            email=secrets.confluence_email,
-            api_token=secrets.confluence_api_token,
-            space_key=config["confluence_space_key"],
-            parent_page_id=config["confluence_parent_page_id"],
-            logger=logger,
-        )
-        slack_notifier = SlackNotifier(secrets.slack_webhook_url, logger)
-
-        errors: list[str] = []
-
-        try:
-            triage_result.confluence_page_url = confluence_client.create_page(triage_result)
-        except Exception as exc:  # noqa: BLE001
-            errors.append("confluence_documentation_failed")
-            log_event(
-                logger,
-                "error",
-                "Confluence page creation failed.",
-                finding_id=finding.finding_id,
-                error=str(exc),
-            )
-
-        triage_result.slack_notification_sent = slack_notifier.send(triage_result)
-        if not triage_result.slack_notification_sent:
-            errors.append("slack_notification_not_sent")
-
-        triage_result.errors.extend(errors)
-        log_event(
-            logger,
-            "info",
-            "Security finding processed.",
-            event_id=ingestion_metadata.event_id,
-            finding_id=finding.finding_id,
-            decision=decision.decision,
-            risk_level=decision.final_risk_level,
-        )
-        return triage_result.model_dump(mode="json")
-    except Exception as exc:  # noqa: BLE001
-        log_event(logger, "error", "Unhandled error while processing finding.", error=str(exc))
         return {
-            "status": "error",
+            "status": "ignored",
             "message": str(exc),
             "project_name": config["project_name"],
         }
+
+    log_event(
+        logger,
+        "info",
+        "Normalized incoming security finding.",
+        event_id=ingestion_metadata.event_id,
+        event_shape=ingestion_metadata.event_shape,
+        finding_id=finding.finding_id,
+        finding_source=finding.source,
+        severity=finding.severity,
+        finding_type=finding.finding_type,
+        environment=finding.environment,
+        resource_id=finding.resource_id,
+    )
+
+    # Dedup (REVIEW.md B6): skip findings we have already processed within the TTL
+    # window so re-emitted GuardDuty findings don't create duplicate Confluence pages
+    # or Slack spam. Checked before spending on the LLM. Disabled when no table is set.
+    if config["dedup_table_name"] and is_duplicate(
+        finding.finding_id, config["dedup_table_name"], config["aws_region"], logger
+    ):
+        log_event(
+            logger,
+            "info",
+            "Duplicate finding already processed; skipping.",
+            event_id=ingestion_metadata.event_id,
+            finding_id=finding.finding_id,
+        )
+        return {
+            "status": "skipped_duplicate",
+            "finding_id": finding.finding_id,
+            "project_name": config["project_name"],
+        }
+
+    # No broad try/except below on purpose. If Secrets Manager, Bedrock/OpenAI, or
+    # any other step raises, the Lambda fails so EventBridge retries and, on
+    # exhaustion, routes the event to the DLQ. Swallowing here would lose the
+    # finding silently — the worst outcome for a security pipeline. See REVIEW.md B1.
+    secrets = load_integration_secrets(config["secret_name"], config["aws_region"], logger)
+
+    analyzer = LLMAnalyzer(
+        provider=config["llm_provider"],
+        region_name=config["aws_region"],
+        logger=logger,
+        openai_model=config["openai_model"],
+        openai_base_url=config["openai_base_url"],
+        bedrock_model_id=config["bedrock_model_id"],
+        self_consistency_samples=config["self_consistency_samples"],
+    )
+    llm_analysis = analyzer.analyze(finding, secrets)
+    # Deterministic threat-intel enrichment feeds a hard rule into the policy engine
+    # (CVE on CISA KEV -> never suppressible). Fail-open: never blocks triage.
+    enrichment = enrich_finding(finding, logger)
+    decision = evaluate_policy(finding, llm_analysis, config["suppression_allowlist"], enrichment)
+
+    triage_result = TriageResult(
+        finding=finding,
+        llm_analysis=llm_analysis,
+        policy_decision=decision,
+        ingestion_metadata=ingestion_metadata,
+        enrichment=enrichment,
+        execution_id=execution_id,
+        processed_at=processed_at,
+    )
+
+    confluence_client = ConfluenceClient(
+        base_url=secrets.confluence_base_url,
+        email=secrets.confluence_email,
+        api_token=secrets.confluence_api_token,
+        space_key=config["confluence_space_key"],
+        parent_page_id=config["confluence_parent_page_id"],
+        logger=logger,
+    )
+    slack_notifier = SlackNotifier(secrets.slack_webhook_url, logger)
+
+    # Slack/Confluence are documentation/notification side-effects: a failure here
+    # is recorded in `errors` but must NOT fail the invocation — the triage decision
+    # already succeeded, and re-running would re-notify/re-document.
+    errors: list[str] = []
+
+    try:
+        triage_result.confluence_page_url = confluence_client.create_page(triage_result)
+    except Exception as exc:  # noqa: BLE001
+        errors.append("confluence_documentation_failed")
+        log_event(
+            logger,
+            "error",
+            "Confluence page creation failed.",
+            finding_id=finding.finding_id,
+            error=str(exc),
+        )
+
+    triage_result.slack_notification_sent = slack_notifier.send(triage_result)
+    if not triage_result.slack_notification_sent:
+        errors.append("slack_notification_not_sent")
+
+    triage_result.errors.extend(errors)
+
+    # Mark only after a successful run so a failed-and-retried finding is not skipped.
+    if config["dedup_table_name"]:
+        mark_processed(
+            finding.finding_id,
+            config["dedup_table_name"],
+            config["aws_region"],
+            config["dedup_ttl_seconds"],
+            logger,
+        )
+
+    log_event(
+        logger,
+        "info",
+        "Security finding processed.",
+        event_id=ingestion_metadata.event_id,
+        finding_id=finding.finding_id,
+        decision=decision.decision,
+        risk_level=decision.final_risk_level,
+    )
+    return triage_result.model_dump(mode="json")
 
 
 def _load_runtime_config() -> dict[str, Any]:
@@ -139,5 +197,8 @@ def _load_runtime_config() -> dict[str, Any]:
         "openai_model": os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
         "openai_base_url": os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
         "bedrock_model_id": os.getenv("BEDROCK_MODEL_ID", "au.anthropic.claude-sonnet-4-6"),
+        "self_consistency_samples": int(os.getenv("LLM_SELF_CONSISTENCY_SAMPLES", "1")),
+        "dedup_table_name": os.getenv("DEDUP_TABLE_NAME", ""),
+        "dedup_ttl_seconds": int(os.getenv("DEDUP_TTL_SECONDS", "86400")),
         "suppression_allowlist": allowlist,
     }

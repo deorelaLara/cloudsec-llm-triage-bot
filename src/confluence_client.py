@@ -45,12 +45,15 @@ class ConfluenceClient:
         if response.ok:
             return self._extract_page_url(response)
 
-        if response.status_code == 400:
+        # Only a genuine duplicate-title conflict warrants the unique-suffix retry.
+        # Any other 400 (bad space key, malformed body, ...) must surface instead of
+        # being silently masked behind the retry. See REVIEW.md section B6.
+        if response.status_code == 400 and self._is_duplicate_title_error(response):
             unique_title = self._build_unique_title(triage_result)
             log_event(
                 self.logger,
                 "warning",
-                "Confluence rejected the initial page title. Retrying with a unique suffix.",
+                "Confluence reported a duplicate title. Retrying with a unique suffix.",
                 finding_id=triage_result.finding.finding_id,
                 original_title=title,
                 retry_title=unique_title,
@@ -62,11 +65,16 @@ class ConfluenceClient:
                 return self._extract_page_url(retry_response)
 
             raise RuntimeError(
-                f"Confluence create failed after retry ({retry_response.status_code}): "
-                f"{retry_response.text[:500]}"
+                f"Confluence create failed after unique-title retry "
+                f"({retry_response.status_code}): {retry_response.text[:500]}"
             )
 
         raise RuntimeError(f"Confluence create failed ({response.status_code}): {response.text[:500]}")
+
+    @staticmethod
+    def _is_duplicate_title_error(response: requests.Response) -> bool:
+        text = (response.text or "").lower()
+        return "title already exists" in text or "same title" in text
 
     def _build_title(self, triage_result: TriageResult) -> str:
         risk = triage_result.policy_decision.final_risk_level.upper()
@@ -125,6 +133,22 @@ class ConfluenceClient:
             "<h1>Raw Finding</h1>",
             f"<pre>{raw_finding}</pre>",
         ]
+
+        enrichment = triage_result.enrichment
+        if enrichment is not None and enrichment.cve_id:
+            epss = "%.5f" % enrichment.epss_score if enrichment.epss_score is not None else "n/a"
+            sections[-2:-2] = [
+                "<h1>Threat Intelligence</h1>",
+                (
+                    "<table>"
+                    f"<tr><td><strong>CVE</strong></td><td>{html.escape(enrichment.cve_id)}</td></tr>"
+                    "<tr><td><strong>CISA KEV (actively exploited)</strong></td>"
+                    f"<td>{'YES' if enrichment.in_cisa_kev else 'no'}</td></tr>"
+                    f"<tr><td><strong>EPSS</strong></td><td>{epss}</td></tr>"
+                    "</table>"
+                ),
+            ]
+
         return "".join(sections)
 
     def _build_payload(self, title: str, body: str) -> dict:

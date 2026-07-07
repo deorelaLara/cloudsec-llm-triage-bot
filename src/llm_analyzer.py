@@ -11,6 +11,12 @@ from logger import log_event
 from models import IntegrationSecretBundle, LLMAnalysis, NormalizedFinding
 
 
+# The LLM must answer by *calling* this tool. Its input schema is the LLMAnalysis
+# contract, so the provider validates the shape for us and we read structured data
+# directly — no more parsing JSON out of free text. See REVIEW.md section C3.
+TRIAGE_TOOL_NAME = "submit_triage"
+
+
 class LLMAnalyzer:
     def __init__(
         self,
@@ -20,6 +26,7 @@ class LLMAnalyzer:
         openai_model: str | None = None,
         openai_base_url: str | None = None,
         bedrock_model_id: str | None = None,
+        self_consistency_samples: int | None = None,
     ) -> None:
         self.provider = (provider or "openai").lower()
         self.region_name = region_name
@@ -30,19 +37,62 @@ class LLMAnalyzer:
             "BEDROCK_MODEL_ID",
             "au.anthropic.claude-sonnet-4-6",
         )
+        samples = (
+            self_consistency_samples
+            if self_consistency_samples is not None
+            else int(os.getenv("LLM_SELF_CONSISTENCY_SAMPLES", "1"))
+        )
+        self.self_consistency_samples = max(1, samples)
 
     def analyze(self, finding: NormalizedFinding, secrets: IntegrationSecretBundle) -> LLMAnalysis:
+        # Self-consistency (REVIEW.md B4): the LLM's self-reported confidence is not
+        # calibrated. With samples > 1 we run the analysis N times and derive the
+        # confidence from how often the runs AGREE on the risk level — a far more
+        # robust signal for the policy engine's confidence gate. Default 1 keeps the
+        # original single-shot behaviour (and cost).
+        if self.self_consistency_samples <= 1:
+            return self._analyze_once(finding, secrets)
+
+        samples = [self._analyze_once(finding, secrets) for _ in range(self.self_consistency_samples)]
+        return self._aggregate(samples)
+
+    def _aggregate(self, samples: list[LLMAnalysis]) -> LLMAnalysis:
+        from collections import Counter
+
+        rank = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+        counts = Counter(s.risk_level for s in samples)
+        top = max(counts.values())
+        # Majority risk level; ties resolved toward the more severe one.
+        majority = max((r for r, c in counts.items() if c == top), key=lambda r: rank.get(r, 0))
+        agreement = counts[majority] / len(samples)
+        representative = next(s for s in samples if s.risk_level == majority)
+
+        return LLMAnalysis(
+            summary=representative.summary,
+            risk_level=majority,
+            confidence=round(agreement, 2),
+            rationale=(
+                f"Self-consistency over {len(samples)} samples: {agreement:.0%} agreed on "
+                f"'{majority}'. {representative.rationale}"
+            ),
+            indicators=representative.indicators,
+            recommended_action=representative.recommended_action,
+            # Conservative: only a suppression candidate if EVERY sample agreed.
+            suppression_candidate=all(s.suppression_candidate for s in samples),
+            finding_tags=representative.finding_tags,
+        )
+
+    def _analyze_once(self, finding: NormalizedFinding, secrets: IntegrationSecretBundle) -> LLMAnalysis:
         prompt = self._build_prompt(finding)
 
         try:
             if self.provider == "bedrock":
-                raw_content = self._invoke_bedrock(prompt)
+                payload = self._invoke_bedrock(prompt)
             elif self.provider == "openai":
-                raw_content = self._invoke_openai(prompt, secrets.openai_api_key or "")
+                payload = self._invoke_openai(prompt, secrets.openai_api_key or "")
             else:
                 raise ValueError(f"Unsupported LLM provider: {self.provider}")
 
-            payload = self._extract_json_document(raw_content)
             return LLMAnalysis.model_validate(payload)
         except (RuntimeError, ValueError, ValidationError, KeyError, json.JSONDecodeError) as exc:
             log_event(
@@ -55,7 +105,12 @@ class LLMAnalyzer:
             )
             return self._safe_default(finding, str(exc))
 
-    def _invoke_openai(self, prompt: str, api_key: str) -> str:
+    def _tool_input_schema(self) -> dict[str, Any]:
+        # Derived from the Pydantic model so the tool contract and the validation
+        # contract can never drift apart.
+        return LLMAnalysis.model_json_schema()
+
+    def _invoke_openai(self, prompt: str, api_key: str) -> dict[str, Any]:
         if not api_key:
             raise RuntimeError("Missing OpenAI API key in secret payload.")
 
@@ -65,26 +120,47 @@ class LLMAnalyzer:
         response = client.chat.completions.create(
             model=self.openai_model,
             temperature=0.1,
-            response_format={"type": "json_object"},
+            tools=[
+                {
+                    "type": "function",
+                    "function": {
+                        "name": TRIAGE_TOOL_NAME,
+                        "description": "Return the structured triage analysis for the security finding.",
+                        "parameters": self._tool_input_schema(),
+                    },
+                }
+            ],
+            tool_choice={"type": "function", "function": {"name": TRIAGE_TOOL_NAME}},
             messages=[
                 {
                     "role": "system",
                     "content": (
                         "You are a cloud security triage assistant. "
-                        "Return only valid JSON and never recommend autonomous suppression of risky findings."
+                        "Never recommend autonomous suppression of risky findings."
                     ),
                 },
                 {"role": "user", "content": prompt},
             ],
         )
-        return response.choices[0].message.content or "{}"
+        tool_calls = response.choices[0].message.tool_calls or []
+        if not tool_calls:
+            raise ValueError("OpenAI response did not include the submit_triage function call.")
+        return json.loads(tool_calls[0].function.arguments)
 
-    def _invoke_bedrock(self, prompt: str) -> str:
+    def _invoke_bedrock(self, prompt: str) -> dict[str, Any]:
         client = boto3.client("bedrock-runtime", region_name=self.region_name)
         payload = {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 900,
             "temperature": 0.1,
+            "tools": [
+                {
+                    "name": TRIAGE_TOOL_NAME,
+                    "description": "Return the structured triage analysis for the security finding.",
+                    "input_schema": self._tool_input_schema(),
+                }
+            ],
+            "tool_choice": {"type": "tool", "name": TRIAGE_TOOL_NAME},
             "messages": [
                 {
                     "role": "user",
@@ -99,47 +175,25 @@ class LLMAnalyzer:
             accept="application/json",
         )
         body = json.loads(response["body"].read())
-        return body["content"][0]["text"]
+        for block in body.get("content", []):
+            if block.get("type") == "tool_use" and block.get("name") == TRIAGE_TOOL_NAME:
+                return block["input"]
+        raise ValueError("Bedrock response did not include the submit_triage tool call.")
 
     def _build_prompt(self, finding: NormalizedFinding) -> str:
         finding_json = json.dumps(finding.model_dump(mode="json"), indent=2)
         return f"""
-Analyze the following AWS security finding and produce a risk recommendation as valid JSON.
+Analyze the following AWS security finding and produce a risk recommendation.
 
 Hard constraints:
 - The LLM is advisory only.
 - Do not recommend autonomous suppression unless the evidence strongly suggests a low-risk false positive.
 - Be conservative when uncertainty exists.
-- Return only JSON with the exact schema below.
-
-JSON schema:
-{{
-  "summary": "short executive summary",
-  "risk_level": "low|medium|high|critical",
-  "confidence": 0.0,
-  "rationale": "detailed reasoning",
-  "indicators": ["indicator 1", "indicator 2"],
-  "recommended_action": "actionable recommendation",
-  "suppression_candidate": false,
-  "finding_tags": ["credential compromise", "public exposure"]
-}}
+- Report your analysis by calling the {TRIAGE_TOOL_NAME} tool. Do not answer in free text.
 
 Finding:
 {finding_json}
 """.strip()
-
-    def _extract_json_document(self, raw_content: str) -> dict[str, Any]:
-        candidate = raw_content.strip()
-        if candidate.startswith("```"):
-            candidate = candidate.strip("`")
-            candidate = candidate.replace("json\n", "", 1).strip()
-
-        start = candidate.find("{")
-        end = candidate.rfind("}")
-        if start == -1 or end == -1 or end < start:
-            raise ValueError("The LLM response does not contain a JSON object.")
-
-        return json.loads(candidate[start : end + 1])
 
     def _safe_default(self, finding: NormalizedFinding, error_message: str) -> LLMAnalysis:
         fallback_risk = finding.severity if finding.severity in {"low", "medium", "high", "critical"} else "medium"
