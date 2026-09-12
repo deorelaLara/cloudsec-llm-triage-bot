@@ -14,3 +14,6 @@ terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 terraform/terraform.tfvars
 terraform/.terraform.tfstate.lock*.info
+
+mvp/.env
+mvp/data/mvp_triage.db

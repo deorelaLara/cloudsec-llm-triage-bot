@@ -1,0 +1,20 @@
+{
+  "version": "0",
+  "id": "evt-unsupported-001",
+  "detail-type": "AWS Health Event",
+  "source": "aws.health",
+  "account": "123456789012",
+  "time": "2026-05-21T10:00:00Z",
+  "region": "us-east-1",
+  "detail": {
+    "eventArn": "arn:aws:health:us-east-1::event/EC2/AWS_EC2_MAINTENANCE",
+    "service": "EC2",
+    "eventTypeCode": "AWS_EC2_INSTANCE_MAINTENANCE_SCHEDULED",
+    "eventDescription": [
+      {
+        "language": "en_US",
+        "latestDescription": "Scheduled maintenance."
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "version": "0",
+  "id": "evt-guardduty-003",
+  "detail-type": "GuardDuty Finding",
+  "source": "aws.guardduty",
+  "account": "123456789012",
+  "time": "2026-05-20T12:20:00Z",
+  "region": "us-east-1",
+  "detail": {
+    "id": "32abc34d567e8fa901bc234d567ef892",
+    "accountId": "123456789012",
+    "region": "us-east-1",
+    "severity": 1.2,
+    "title": "Recon:EC2/PortProbeUnprotectedPort",
+    "description": "A sandbox honeypot intentionally exposed for red-team training triggered a low-noise GuardDuty port probe event that is expected in this environment.",
+    "type": "Recon:EC2/PortProbeUnprotectedPort",
+    "resource": {
+      "resourceType": "Instance",
+      "instanceDetails": {
+        "instanceId": "i-0sandboxhoneypot999",
+        "tags": [
+          {
+            "key": "Environment",
+            "value": "sandbox"
+          }
+        ]
+      }
+    },
+    "service": {
+      "action": {
+        "actionType": "NETWORK_CONNECTION"
+      }
+    }
+  }
+}

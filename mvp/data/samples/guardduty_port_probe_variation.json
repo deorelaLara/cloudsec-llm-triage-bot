@@ -1,0 +1,52 @@
+{
+  "version": "0",
+  "id": "evt-guardduty-004",
+  "detail-type": "GuardDuty Finding",
+  "source": "aws.guardduty",
+  "account": "123456789012",
+  "time": "2026-05-21T09:40:00Z",
+  "region": "us-east-1",
+  "detail": {
+    "id": "42abc34d567e8fa901bc234d567ef893",
+    "accountId": "123456789012",
+    "region": "us-east-1",
+    "severity": 2.1,
+    "title": "Recon:EC2/PortProbeUnprotectedPort",
+    "description": "Repeated low-severity port probes were observed against the same development host, but this time against a different port and from a different source address.",
+    "type": "Recon:EC2/PortProbeUnprotectedPort",
+    "resource": {
+      "resourceType": "Instance",
+      "instanceDetails": {
+        "instanceId": "i-0devportprobe12345",
+        "tags": [
+          {
+            "key": "Environment",
+            "value": "dev"
+          }
+        ]
+      }
+    },
+    "service": {
+      "action": {
+        "actionType": "PORT_PROBE",
+        "portProbeAction": {
+          "blocked": false,
+          "portProbeDetails": [
+            {
+              "localPortDetails": {
+                "port": 3389,
+                "portName": "RDP"
+              },
+              "remoteIpDetails": {
+                "ipAddressV4": "198.51.100.77",
+                "country": {
+                  "countryName": "Bulgaria"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
