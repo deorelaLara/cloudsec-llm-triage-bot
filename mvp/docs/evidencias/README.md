@@ -33,7 +33,7 @@ sobre la pagina servida en `http://127.0.0.1:8000` con OpenAI `gpt-4.1-mini`.
 | `12-inspector-medio.png` | CVE medio en dev: `manual_review`, `only_low_risk_can_be_suppressed` |
 | `13-tool-invalida.png` | Caso d: un identificador inexistente escrito a mano; el agente reporta el error de la tool |
 | `14-leyenda.png` | La leyenda de decisiones desplegada |
-| `15-fuera-de-guion.png` | Tres preguntas fuera de guion respondidas por el agente: cultura general, orden de suprimir e inyeccion de instrucciones |
+| `15-fuera-de-guion.png` | Tres preguntas fuera de guion respondidas por el agente: una mixta (triage mas el tiempo de manana), cultura general y orden de suprimir |
 
 ## videos/
 
@@ -51,7 +51,8 @@ python verificar.py --todos-los-samples --fuera-de-guion --guardar docs/evidenci
 
 Cada fichero es la respuesta completa de `triagear_finding` para un caso (`a_*`,
 `b_*`, ..., `sample_*`), del `POST /api/chat` (`chat_post_api_chat.json`) o, en
-`fuera_de_guion.json`, las ocho preguntas que el agente no debe contestar por su
-cuenta con su criterio, su respuesta literal y su veredicto. Sirven
+`fuera_de_guion.json`, las seis preguntas que el agente no debe contestar por su
+cuenta (cuatro ajenas y dos mixtas) con su criterio, su respuesta literal y su
+veredicto. Sirven
 para comparar lo que ve el evaluador con lo que devolvio el sistema en la
 verificacion documentada en el README.
