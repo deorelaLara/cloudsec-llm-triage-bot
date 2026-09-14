@@ -56,6 +56,13 @@ completo saldria igual de AWS hacia un tercero y el argumento de privacidad se c
 
 - **No modificar nada fuera de `mvp/`.** Unica excepcion ya acordada: `.gitignore`
   de la raiz, que ignora `mvp/.env` y `mvp/data/mvp_triage.db`.
+- **Rama y publicacion.** La carpeta de trabajo es `~/mvp`; el repositorio git es
+  `~/Desktop/Niupay/security-bot/cloudsec-llm-triage-bot`, remoto
+  `https://github.com/deorelaLara/cloudsec-llm-triage-bot`, rama `mvp-triage-bot`
+  (creada desde `review/cloudsec-triage`). Publicar = `rsync` de `~/mvp/` a `mvp/`
+  del repositorio (excluyendo `.venv`, `__pycache__`, `.pytest_cache`, `.DS_Store`,
+  `.env` y `data/mvp_triage.db`), commit en `mvp-triage-bot` y `git push origin
+  mvp-triage-bot`.
 - **`mvp/core/` es una copia deliberada**, no un import a `../src`. El hash del commit
   de origen esta en `mvp/README.md`. La divergencia debe quedar rastreable.
 - Los modulos copiados conservan su logica. La unica modificacion permitida es

@@ -584,7 +584,8 @@ usan **siempre** el mismo proveedor, por diseno: salen de la misma fabrica,
 `llm_factory.py`.
 
 **Que se reutilizo del sistema serverless.** Copiado a `mvp/core/` desde el commit
-`694b2c80f8fad43d4f61ede54fccef6202cb846b` de la rama `feat/mvp-mcp`:
+`694b2c80f8fad43d4f61ede54fccef6202cb846b`, punta de la rama
+`review/cloudsec-triage` (ya fusionada en `main`):
 `models.py`, `finding_normalizer.py`, `policy_engine.py`, `enrichment.py`,
 `llm_analyzer.py`, `logger.py`. Los cinco tests correspondientes se copiaron sin
 modificar. Es una copia deliberada, no un import a `../src`; la divergencia es
@@ -733,10 +734,16 @@ versiones validadas quedan anotadas.
 
 ## 18. Trazabilidad
 
-- **Rama:** `feat/mvp-mcp`, creada desde `main`. Todo el MVP vive en `mvp/`; fuera
-  de esa carpeta solo cambio `.gitignore`, que ignora `mvp/.env` y
-  `mvp/data/mvp_triage.db`.
-- **Commit de origen de la copia:** `694b2c80f8fad43d4f61ede54fccef6202cb846b`.
+- **Repositorio:** <https://github.com/deorelaLara/cloudsec-llm-triage-bot>.
+- **Rama del MVP:** [`mvp-triage-bot`](https://github.com/deorelaLara/cloudsec-llm-triage-bot/tree/mvp-triage-bot),
+  creada desde `review/cloudsec-triage`. Todo el MVP vive en `mvp/`; fuera de esa
+  carpeta solo cambio `.gitignore`, que ignora `mvp/.env` y `mvp/data/mvp_triage.db`.
+  El sistema serverless original sigue intacto en `src/`, `tests/`, `samples/` y
+  `terraform/` de esa misma rama.
+- **Commit de origen de la copia:** `694b2c80f8fad43d4f61ede54fccef6202cb846b`,
+  punta de `review/cloudsec-triage` y base de `mvp-triage-bot`. Como `src/` no ha
+  cambiado desde entonces en esta rama, el `diff` de abajo compara directamente
+  contra el codigo del que se copio.
 - **Divergencia de los modulos copiados**, desde la raiz del repositorio:
 
 ```bash
