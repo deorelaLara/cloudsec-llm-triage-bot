@@ -2,6 +2,11 @@
 
 Material de apoyo para la evaluacion. Nada de esta carpeta lo usa el codigo.
 
+Todo procede de plantillas anonimizadas y datos sinteticos: por privacidad, el MVP no
+se conecta a la cuenta real de AWS (ver la seccion 14 del README principal). Los JSON
+de `salidas/`, las capturas y los videos se pueden compartir sin exponer datos
+operativos.
+
 ## capturas/
 
 Capturas de pantalla de la interfaz, una por estado. Nombres sugeridos, para que el

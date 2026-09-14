@@ -115,7 +115,6 @@ code { font-family: var(--mono); }
 .aviso-datos {
   margin: 0;
   padding: 8px 20px;
-  min-height: calc(var(--cabecera-alto) - var(--barra-alto));
   display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;
   background: var(--ambar-suave);
   border-top: 1px solid var(--borde);
@@ -518,7 +517,6 @@ h2 {
 @media (max-width: 960px) {
   .tablero { grid-template-columns: 1fr; gap: 14px; padding: 14px; }
   .panel-findings { position: static; height: auto; max-height: 48vh; }
-  .aviso-datos { min-height: 0; }
   .panel-conversacion { height: auto; min-height: 60vh; }
   .historial { max-height: 56vh; }
   .marca-sub { display: none; }

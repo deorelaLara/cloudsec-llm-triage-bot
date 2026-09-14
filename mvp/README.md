@@ -55,6 +55,18 @@ Publico: un evaluador que abre la pagina, hace clic en un finding y espera ver u
 decision con su razon. Usuario final: el lider DevSecOps, unica persona que puede
 aprobar una supresion.
 
+**Por que datos sinteticos.** El sistema serverless de la raiz si esta conectado a
+GuardDuty e Inspector a traves de EventBridge, dentro de la cuenta de AWS. El MVP es
+una entrega academica que corre en local y se comparte fuera de la organizacion, asi
+que **por privacidad no se conecta a la cuenta real**: un finding real describe la
+superficie de ataque de la cuenta (identificadores de cuenta y de recurso, claves de
+acceso, direcciones IP de origen, CVE presentes en produccion). En su lugar usa
+plantillas de prueba: los cinco findings del repositorio, ya anonimizados y con la
+forma real del sobre de EventBridge, mas dos creados para la demo, y un inventario,
+un historial y un catalogo KEV/EPSS sinteticos y coherentes con ellos. La logica que
+se ejercita es la misma; solo cambia la fuente de los eventos. Detalle en la
+[seccion 14](#14-registro-de-decisiones).
+
 ---
 
 ## 2. Guia rapida para el evaluador
@@ -91,7 +103,8 @@ uvicorn api.chat:app --reload --port 8000
 modelo configurado; si dice "no configurado", revisa `.env` y reinicia los dos
 procesos.
 
-**5. Probar.** A la izquierda estan los siete findings de demostracion. Haz clic en
+**5. Probar.** A la izquierda estan los siete findings de demostracion, plantillas
+anonimizadas: por privacidad el MVP no consulta la cuenta real de AWS. Haz clic en
 uno: la consulta se prepara en el cuadro de texto, lista para enviar. O pulsa
 **Ejecutar** en la tarjeta para lanzar el triage directamente. Cada respuesta llega
 como una tarjeta con la decision coloreada, el nivel de riesgo, los reason codes y la
@@ -605,6 +618,24 @@ todavia no implementa. `variacion_detectada` exige que exista un patron
 (`MINIMO_OCURRENCIAS_PATRON`, por defecto 3) antes de marcar variacion: sin
 ocurrencias previas no hay nada de lo que variar.
 
+**Datos sinteticos por privacidad, no por limitacion tecnica.** La integracion
+directa con GuardDuty e Inspector existe y funciona en el sistema serverless de la
+raiz (EventBridge → Lambda), y `finding_normalizer.py`, copiado tal cual, ya fue
+validado contra eventos reales de AWS. Para el MVP se tomo la decision deliberada de
+**no conectarlo a la cuenta real y mantener ocultos los datos operativos**: los
+findings reales contienen identificadores de cuenta, recursos, claves de acceso,
+direcciones IP de origen y CVE presentes en produccion, y una demo academica que se
+ejecuta en portatiles y se comparte fuera de la organizacion no debe contenerlos ni
+consultarlos. En su lugar, el MVP trabaja con plantillas de prueba: los cinco samples
+del repositorio, anonimizados y con la forma real del sobre de EventBridge, mas dos
+anadidos para la demo; y un inventario, un historial y un catalogo KEV/EPSS
+sinteticos y coherentes con esos samples. La logica que se ejercita es la misma que
+en produccion; lo unico que cambia es la fuente de los eventos: `core/samples.py`
+lee ficheros en vez de recibir eventos de EventBridge, y es el unico punto a
+sustituir para conectar una fuente real. Por la misma razon `enrichment_local.py`
+no sale a internet: la demo no debe depender de la red ni de servicios externos para
+reproducirse, ni enviar a terceros que CVE tiene la organizacion.
+
 **Un septimo sample.** Ademas de la variacion de patron que pide el enunciado, se
 anadio `unsupported_health_event.json`, un AWS Health Event con el sobre de
 EventBridge, para poder demostrar el caso "fuera de alcance" desde la propia pagina.
@@ -653,16 +684,22 @@ versiones validadas quedan anotadas.
   detalle interno (`tests/test_api_chat.py` lo comprueba).
 - **Frontend sin HTML generado.** Todo lo que llega del backend se inserta con
   `textContent`.
-- **Datos sinteticos.** Los findings estan anonimizados y el inventario, el historial
-  y el catalogo KEV/EPSS son locales. Nada procede de una cuenta de AWS real.
+- **Datos sinteticos por privacidad.** El MVP no se conecta a la cuenta real de AWS.
+  Los findings son plantillas anonimizadas con la forma real del sobre de
+  EventBridge, y el inventario, el historial y el catalogo KEV/EPSS son locales. Nada
+  de lo que se ve procede de una cuenta real ni permite inferir su superficie de
+  ataque, asi que la demo, las evidencias y este repositorio se pueden compartir.
 
 ---
 
 ## 16. Limitaciones conocidas
 
-- Datos sinteticos. Inventario, historial y catalogo KEV/EPSS son locales y estan
-  derivados de los samples. `enrichment_local.py` sustituye la consulta de red del
-  original; el modulo original queda intacto pero no se usa.
+- Datos sinteticos, por decision de privacidad (ver [seccion 14](#14-registro-de-decisiones)).
+  Inventario, historial y catalogo KEV/EPSS son locales y estan derivados de los
+  samples. Para conectar una fuente real hay que sustituir `core/samples.py` por la
+  recepcion de eventos y alimentar las tablas desde un inventario y un historico
+  reales; `enrichment_local.py` sustituye la consulta de red del original, que queda
+  intacto pero sin usar.
 - Sin autenticacion, sin persistencia remota, sin concurrencia. Un unico usuario.
 - El agente se reconstruye en cada peticion (descubre la tool por HTTP cada vez).
   Es deliberado para que un MCP que se cae y vuelve no obligue a reiniciar, pero

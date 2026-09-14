@@ -11,6 +11,11 @@ e historial de patron.
 Publico: un evaluador academico que abre la pagina, hace clic en un identificador de
 finding y espera ver una decision de triage con su razon.
 
+Los datos son plantillas anonimizadas y sinteticas por decision de privacidad: el MVP
+no se conecta a la cuenta real de AWS ni debe contener datos operativos reales
+(cuentas, recursos, claves, IPs, CVE de produccion). La integracion real vive en el
+sistema serverless de la raiz; `core/samples.py` es el unico punto a sustituir.
+
 ## Alcance
 
 - Todo el MVP vive en `mvp/`. Nada fuera de esa carpeta se modifica.

@@ -468,5 +468,16 @@
     campo.focus();
   });
 
+  // La cabecera fija cambia de alto con el ancho de la ventana (el aviso puede ocupar
+  // una o dos lineas); los paneles calculan su altura con esta variable.
+  var cabecera = document.querySelector(".cabecera");
+  function ajustarCabecera() {
+    if (!cabecera) return;
+    document.documentElement.style.setProperty("--cabecera-alto", cabecera.offsetHeight + "px");
+  }
+  ajustarCabecera();
+  window.addEventListener("resize", ajustarCabecera);
+  if (window.ResizeObserver) new ResizeObserver(ajustarCabecera).observe(cabecera);
+
   cargarFindings();
 })();
