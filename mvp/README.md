@@ -148,7 +148,11 @@ Ejecuta los casos de aceptacion a, b, c, d y f contra el servidor MCP, hace un
 
 ## 3. Arquitectura
 
-![Arquitectura del MVP](docs/arquitectura.png)
+![Arquitectura del MVP con los iconos de cada tecnologia](docs/arquitectura-iconos.png)
+
+*Version detallada, con el papel de cada modulo y las reglas del motor:*
+[`docs/arquitectura.png`](docs/arquitectura.png). La version de iconos tambien esta
+en SVG: [`docs/arquitectura-iconos.svg`](docs/arquitectura-iconos.svg).
 
 ```mermaid
 flowchart TD
@@ -525,9 +529,10 @@ sqlite3 -header data/mvp_triage.db "select finding_type, resource_id, puerto, or
 
 | Ruta | Contenido |
 |---|---|
-| `docs/arquitectura.png` | Diagrama de arquitectura del MVP |
+| `docs/arquitectura-iconos.png`, `.svg` | Diagrama de arquitectura con los iconos de cada tecnologia y el texto minimo |
+| `docs/arquitectura.png` | Diagrama de arquitectura detallado, con el papel de cada modulo |
 | `docs/evidencias/salidas/` | Respuestas JSON reales de la tool y del backend, una por caso y por sample, generadas con `python verificar.py --todos-los-samples --guardar docs/evidencias/salidas` |
-| `docs/evidencias/capturas/` | Capturas de pantalla de cada estado de la interfaz (ver la lista sugerida en `docs/evidencias/README.md`) |
+| `docs/evidencias/capturas/` | 14 capturas reales de la interfaz, una por estado o funcionalidad, tomadas con Chromium automatizado (indice en `docs/evidencias/README.md`) |
 | `docs/evidencias/videos/` | Grabaciones de la demo |
 
 `docs/evidencias/README.md` explica que va en cada carpeta y con que nombre, para que
@@ -724,8 +729,8 @@ versiones validadas quedan anotadas.
    volatil. Hoy la leyenda de la pagina describe una decision que el evaluador puede
    no ver.
 2. **Medir `llamadas_al_modelo`** en vez de calcularlo.
-3. **Capturas y videos** en `docs/evidencias/`: la estructura y los nombres estan
-   preparados; falta el material.
+3. **Videos** en `docs/evidencias/videos/`: la carpeta esta preparada; las capturas
+   ya estan.
 4. Trabajo futuro fuera del alcance academico: inventario e historico reales (CMDB,
    findings historicos de la cuenta), aprobacion humana de la supresion con registro
    de quien aprobo, y despliegue del MCP junto al sistema serverless.
