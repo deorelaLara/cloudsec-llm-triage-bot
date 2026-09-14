@@ -1,0 +1,85 @@
+{
+  "ok": true,
+  "decision": "manual_review",
+  "finding": {
+    "finding_id": "22abc34d567e8fa901bc234d567ef891",
+    "source": "guardduty",
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "severity": "low",
+    "title": "Recon:EC2/PortProbeUnprotectedPort",
+    "description": "Repeated low-severity port probes were observed against a development sandbox host used for ephemeral testing.",
+    "finding_type": "Recon:EC2/PortProbeUnprotectedPort",
+    "resource_id": "i-0devportprobe12345",
+    "resource_type": "Instance",
+    "environment": "dev"
+  },
+  "enrichment": {
+    "cve_id": null,
+    "in_cisa_kev": false,
+    "epss_score": null,
+    "source": "none"
+  },
+  "llm_analysis": {
+    "summary": "Repeated low-severity port probes detected on a development sandbox EC2 instance (i-0devportprobe12345) targeting port 22 (SSH). The instance is used for ephemeral testing in a development environment. No blocking action was taken on the probes.",
+    "risk_level": "medium",
+    "confidence": 0.8,
+    "rationale": "Although the finding is low severity and targets a development environment, port probes on SSH can indicate reconnaissance activity that might lead to exploitation if the instance is not properly secured. Development environments often have less stringent controls, increasing risk. The probes were not blocked, which could allow further probing or attacks. Given the potential for lateral movement or data exposure if compromised, the risk is elevated to medium.",
+    "indicators": [
+      "Repeated port probes on port 22 (SSH)",
+      "Target is a development sandbox instance",
+      "Probes originated from IP 203.0.113.45 in Netherlands",
+      "No blocking of port probes"
+    ],
+    "recommended_action": "Implement network access controls to restrict SSH access to trusted IPs only. Enable security group rules to block unauthorized inbound traffic. Consider enabling GuardDuty automated response or AWS WAF to block suspicious IPs. Review and harden instance security configurations, including patching and disabling unused services. Monitor logs for further suspicious activity.",
+    "suppression_candidate": false,
+    "finding_tags": [
+      "port-probe",
+      "ssh",
+      "development-environment",
+      "guardduty"
+    ]
+  },
+  "policy_decision": {
+    "decision": "manual_review",
+    "candidate_for_suppression": false,
+    "final_risk_level": "medium",
+    "reason_codes": [
+      "only_low_risk_can_be_suppressed"
+    ],
+    "recommended_action": "Document the finding and require analyst validation."
+  },
+  "resource_context": {
+    "resource_id": "i-0devportprobe12345",
+    "encontrado": true,
+    "environment": "dev",
+    "tags": {
+      "Environment": "dev",
+      "Owner": "app-team",
+      "Servicio": "ephemeral-testing"
+    },
+    "expuesto_internet": true,
+    "criticidad": "low"
+  },
+  "pattern_history": {
+    "finding_type": "Recon:EC2/PortProbeUnprotectedPort",
+    "resource_id": "i-0devportprobe12345",
+    "ventana_dias": 30,
+    "ocurrencias": 5,
+    "puertos_observados": [
+      22
+    ],
+    "origenes_observados": [
+      "203.0.113.45"
+    ],
+    "ultima_vez": "2026-09-10T01:31:46.367650+00:00",
+    "patron_recurrente": true,
+    "variacion_detectada": false,
+    "variaciones": []
+  },
+  "llamadas_al_modelo": 1,
+  "registro_id": 28,
+  "fuente": "Samples sinteticos de GuardDuty e Inspector en mvp/data/samples/",
+  "proveedor_modelo": "OpenAI · gpt-4.1-mini",
+  "advertencia": "Datos sinteticos de demostracion. Los findings estan anonimizados y el inventario, el historial y el catalogo KEV/EPSS son locales."
+}

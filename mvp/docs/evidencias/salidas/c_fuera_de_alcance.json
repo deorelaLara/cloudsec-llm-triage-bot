@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "decision": "out_of_scope",
+  "policy_decision": {
+    "decision": "out_of_scope",
+    "final_risk_level": "unknown",
+    "reason_codes": [
+      "event_out_of_scope"
+    ],
+    "recommended_action": "El evento no es un finding de Amazon GuardDuty ni de Amazon Inspector (source='aws.health', detail-type='AWS Health Event'). No se ejecuta triage.",
+    "candidate_for_suppression": false
+  },
+  "finding": null,
+  "enrichment": null,
+  "llm_analysis": null,
+  "resource_context": null,
+  "pattern_history": null,
+  "llamadas_al_modelo": 0,
+  "registro_id": null,
+  "fuente": "Samples sinteticos de GuardDuty e Inspector en mvp/data/samples/",
+  "proveedor_modelo": "OpenAI · gpt-4.1-mini",
+  "advertencia": "Datos sinteticos de demostracion. Los findings estan anonimizados y el inventario, el historial y el catalogo KEV/EPSS son locales."
+}

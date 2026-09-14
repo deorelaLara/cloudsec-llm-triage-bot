@@ -1,0 +1,89 @@
+{
+  "ok": true,
+  "decision": "manual_review",
+  "finding": {
+    "finding_id": "42abc34d567e8fa901bc234d567ef893",
+    "source": "guardduty",
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "severity": "low",
+    "title": "Recon:EC2/PortProbeUnprotectedPort",
+    "description": "Repeated low-severity port probes were observed against the same development host, but this time against a different port and from a different source address.",
+    "finding_type": "Recon:EC2/PortProbeUnprotectedPort",
+    "resource_id": "i-0devportprobe12345",
+    "resource_type": "Instance",
+    "environment": "dev"
+  },
+  "enrichment": {
+    "cve_id": null,
+    "in_cisa_kev": false,
+    "epss_score": null,
+    "source": "none"
+  },
+  "llm_analysis": {
+    "summary": "Repeated low-severity port probes detected on a development EC2 instance targeting RDP port 3389 from different source IPs, indicating reconnaissance activity.",
+    "risk_level": "medium",
+    "confidence": 0.8,
+    "rationale": "The finding indicates reconnaissance activity through port probing on an unprotected port (RDP 3389) of a development instance. Although the severity is low and the environment is development, such probes can be precursors to more serious attacks if the port is accessible and vulnerable. The probes are from different IPs, suggesting ongoing scanning attempts. The instance is tagged as development, which may have less stringent controls, but exposure of RDP port is a known risk vector.",
+    "indicators": [
+      "Repeated port probes",
+      "Target port 3389 (RDP)",
+      "Different source IP addresses",
+      "Development environment instance"
+    ],
+    "recommended_action": "Review and restrict inbound security group rules to limit access to port 3389 to trusted IPs only. Consider enabling network-level protections such as AWS Network Firewall or AWS WAF. Monitor the instance for any signs of compromise and consider disabling or securing RDP access if not required.",
+    "suppression_candidate": false,
+    "finding_tags": [
+      "reconnaissance",
+      "port-probe",
+      "ec2",
+      "development",
+      "rdp"
+    ]
+  },
+  "policy_decision": {
+    "decision": "manual_review",
+    "candidate_for_suppression": false,
+    "final_risk_level": "medium",
+    "reason_codes": [
+      "pattern_variation_detected"
+    ],
+    "recommended_action": "El patron recurrente de este finding cambio respecto al historico de los ultimos 30 dias (5 ocurrencias previas). Cambios detectados: puerto 3389 nunca visto antes (historico: 22); origen 198.51.100.77 nunca visto antes (historico: 203.0.113.45). Un escaneo recurrente que cambia de puerto o de origen deja de ser ruido conocido: revisar manualmente antes de tratarlo como tal."
+  },
+  "resource_context": {
+    "resource_id": "i-0devportprobe12345",
+    "encontrado": true,
+    "environment": "dev",
+    "tags": {
+      "Environment": "dev",
+      "Owner": "app-team",
+      "Servicio": "ephemeral-testing"
+    },
+    "expuesto_internet": true,
+    "criticidad": "low"
+  },
+  "pattern_history": {
+    "finding_type": "Recon:EC2/PortProbeUnprotectedPort",
+    "resource_id": "i-0devportprobe12345",
+    "ventana_dias": 30,
+    "ocurrencias": 5,
+    "puertos_observados": [
+      22
+    ],
+    "origenes_observados": [
+      "203.0.113.45"
+    ],
+    "ultima_vez": "2026-09-10T01:31:46.367650+00:00",
+    "patron_recurrente": true,
+    "variacion_detectada": true,
+    "variaciones": [
+      "puerto 3389 nunca visto antes (historico: 22)",
+      "origen 198.51.100.77 nunca visto antes (historico: 203.0.113.45)"
+    ]
+  },
+  "llamadas_al_modelo": 1,
+  "registro_id": 24,
+  "fuente": "Samples sinteticos de GuardDuty e Inspector en mvp/data/samples/",
+  "proveedor_modelo": "OpenAI · gpt-4.1-mini",
+  "advertencia": "Datos sinteticos de demostracion. Los findings estan anonimizados y el inventario, el historial y el catalogo KEV/EPSS son locales."
+}

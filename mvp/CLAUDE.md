@@ -67,6 +67,12 @@ completo saldria igual de AWS hacia un tercero y el argumento de privacidad se c
 - Nada de `AgentExecutor`, `initialize_agent` ni `create_react_agent`. Solo
   `create_agent`.
 - Una sola tool MCP. No se anaden mas.
+- Frontend, en este orden y sin frameworks: titulo y linea de proposito, aviso visible
+  de datos sinteticos, identificadores clicables que **rellenan el cuadro de texto**
+  con una consulta lista para enviar (mas un boton Ejecutar directo), historial en el
+  DOM, campo de texto y boton. Tres estados distinguibles: cargando, respuesta, error.
+- El agente responde en texto plano y empieza con el bloque `decision`,
+  `final_risk_level`, `reason_codes`, `recommended_action`; la pagina lo parsea.
 
 ## Lo que NO se copia del sistema serverless
 
@@ -108,6 +114,9 @@ Ademas:
 - `decision_triage` tiene una fila por finding procesado y ninguna por el caso fuera
   de alcance.
 - Un `POST` real a `/api/chat` con `curl` devuelve respuesta.
+- `python verificar.py` reproduce a, b, c, d, f y el POST con los servidores levantados;
+  `--caso e` con el 8001 apagado; `--todos-los-samples --guardar docs/evidencias/salidas`
+  deja las respuestas JSON como evidencia.
 
 ## Honestidad en la verificacion
 

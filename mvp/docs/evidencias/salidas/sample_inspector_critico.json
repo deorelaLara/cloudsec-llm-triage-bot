@@ -1,0 +1,81 @@
+{
+  "ok": true,
+  "decision": "alert_and_document",
+  "finding": {
+    "finding_id": "arn:aws:inspector2:us-east-1:123456789012:finding/critical-cve-001",
+    "source": "inspector",
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "severity": "critical",
+    "title": "Critical package vulnerability CVE-2026-12345 on production EC2 instance",
+    "description": "Amazon Inspector identified a critical exploitable vulnerability package on a production Linux instance.",
+    "finding_type": "Software and Configuration Checks/Package Vulnerability",
+    "resource_id": "i-0criticalprod123456",
+    "resource_type": "AWS_EC2_INSTANCE",
+    "environment": "production"
+  },
+  "enrichment": {
+    "cve_id": "CVE-2026-12345",
+    "in_cisa_kev": true,
+    "epss_score": 0.94312,
+    "source": "kev_epss"
+  },
+  "llm_analysis": {
+    "summary": "Amazon Inspector detected a critical vulnerability (CVE-2026-12345) in a package on a production EC2 Linux instance (i-0criticalprod123456) in us-east-1. This vulnerability is exploitable and poses a high risk to the production environment.",
+    "risk_level": "critical",
+    "confidence": 0.95,
+    "rationale": "The finding is marked as critical severity by Amazon Inspector, indicating a high likelihood of exploitation and significant impact if exploited. The affected resource is a production EC2 instance, increasing the potential business impact. No evidence suggests this is a false positive or low risk. Immediate remediation is advised to mitigate potential compromise.",
+    "indicators": [
+      "Critical severity from Amazon Inspector",
+      "Exploitable package vulnerability CVE-2026-12345",
+      "Affected resource is a production EC2 instance"
+    ],
+    "recommended_action": "Prioritize patching or updating the vulnerable package on the affected EC2 instance immediately. If patching is not immediately possible, consider isolating the instance or applying compensating controls to reduce exposure until remediation is complete.",
+    "suppression_candidate": false,
+    "finding_tags": [
+      "critical",
+      "vulnerability",
+      "production",
+      "ec2",
+      "linux"
+    ]
+  },
+  "policy_decision": {
+    "decision": "alert_and_document",
+    "candidate_for_suppression": false,
+    "final_risk_level": "critical",
+    "reason_codes": [
+      "cve_in_cisa_kev_blocked"
+    ],
+    "recommended_action": "CVE is on the CISA Known Exploited Vulnerabilities catalog (actively exploited). Patch/escalate immediately; suppression is forbidden."
+  },
+  "resource_context": {
+    "resource_id": "i-0criticalprod123456",
+    "encontrado": true,
+    "environment": "production",
+    "tags": {
+      "Environment": "production",
+      "Owner": "platform-team",
+      "Servicio": "core-api"
+    },
+    "expuesto_internet": true,
+    "criticidad": "critical"
+  },
+  "pattern_history": {
+    "finding_type": "Software and Configuration Checks/Package Vulnerability",
+    "resource_id": "i-0criticalprod123456",
+    "ventana_dias": 30,
+    "ocurrencias": 0,
+    "puertos_observados": [],
+    "origenes_observados": [],
+    "ultima_vez": null,
+    "patron_recurrente": false,
+    "variacion_detectada": false,
+    "variaciones": []
+  },
+  "llamadas_al_modelo": 1,
+  "registro_id": 30,
+  "fuente": "Samples sinteticos de GuardDuty e Inspector en mvp/data/samples/",
+  "proveedor_modelo": "OpenAI · gpt-4.1-mini",
+  "advertencia": "Datos sinteticos de demostracion. Los findings estan anonimizados y el inventario, el historial y el catalogo KEV/EPSS son locales."
+}

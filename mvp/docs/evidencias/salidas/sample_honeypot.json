@@ -1,0 +1,77 @@
+{
+  "ok": true,
+  "decision": "manual_review",
+  "finding": {
+    "finding_id": "32abc34d567e8fa901bc234d567ef892",
+    "source": "guardduty",
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "severity": "low",
+    "title": "Recon:EC2/PortProbeUnprotectedPort",
+    "description": "A sandbox honeypot intentionally exposed for red-team training triggered a low-noise GuardDuty port probe event that is expected in this environment.",
+    "finding_type": "Recon:EC2/PortProbeUnprotectedPort",
+    "resource_id": "i-0sandboxhoneypot999",
+    "resource_type": "Instance",
+    "environment": "sandbox"
+  },
+  "enrichment": {
+    "cve_id": null,
+    "in_cisa_kev": false,
+    "epss_score": null,
+    "source": "none"
+  },
+  "llm_analysis": {
+    "summary": "The finding indicates a port probe on an EC2 instance that is a sandbox honeypot intentionally exposed for red-team training. The event is low severity and expected in this environment.",
+    "risk_level": "low",
+    "confidence": 0.95,
+    "rationale": "The instance is tagged as a sandbox environment and is intentionally exposed as a honeypot for training purposes. The port probe is a low-noise event and is expected behavior in this controlled scenario, reducing the risk of actual compromise.",
+    "indicators": [
+      "Instance tagged as sandbox",
+      "Honeypot intentionally exposed",
+      "Low severity GuardDuty finding",
+      "Expected event in red-team training environment"
+    ],
+    "recommended_action": "No immediate remediation required. Continue monitoring the sandbox environment for any unexpected or higher severity findings. Ensure that production environments are not similarly exposed.",
+    "suppression_candidate": false,
+    "finding_tags": [
+      "sandbox",
+      "honeypot",
+      "red-team",
+      "expected-finding"
+    ]
+  },
+  "policy_decision": {
+    "decision": "manual_review",
+    "candidate_for_suppression": false,
+    "final_risk_level": "low",
+    "reason_codes": [
+      "resource_context_not_found"
+    ],
+    "recommended_action": "El recurso i-0sandboxhoneypot999 no esta en el inventario, asi que no se puede valorar su explotabilidad: se desconoce su entorno, su criticidad y si esta expuesto a internet. Revisar manualmente e inventariar el recurso."
+  },
+  "resource_context": {
+    "resource_id": "i-0sandboxhoneypot999",
+    "encontrado": false,
+    "environment": "unknown",
+    "tags": {},
+    "expuesto_internet": false,
+    "criticidad": "unknown"
+  },
+  "pattern_history": {
+    "finding_type": "Recon:EC2/PortProbeUnprotectedPort",
+    "resource_id": "i-0sandboxhoneypot999",
+    "ventana_dias": 30,
+    "ocurrencias": 0,
+    "puertos_observados": [],
+    "origenes_observados": [],
+    "ultima_vez": null,
+    "patron_recurrente": false,
+    "variacion_detectada": false,
+    "variaciones": []
+  },
+  "llamadas_al_modelo": 1,
+  "registro_id": 27,
+  "fuente": "Samples sinteticos de GuardDuty e Inspector en mvp/data/samples/",
+  "proveedor_modelo": "OpenAI · gpt-4.1-mini",
+  "advertencia": "Datos sinteticos de demostracion. Los findings estan anonimizados y el inventario, el historial y el catalogo KEV/EPSS son locales."
+}

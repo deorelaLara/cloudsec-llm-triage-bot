@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>CloudSec Triage · MVP</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <a class="salto" href="#historial">Saltar al resultado</a>
+
+  <header class="cabecera">
+    <!-- 1. Titulo y una linea que dice que hace el sistema y para quien. -->
+    <div class="barra">
+      <div class="marca">
+        <svg class="marca-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+        <div class="marca-texto">
+          <h1 class="marca-nombre">CloudSec Triage <span class="pill pill-mvp">MVP</span></h1>
+          <p class="marca-sub">
+            Triage asistido por LLM de findings de Amazon GuardDuty e Inspector, para el equipo de
+            seguridad que recibe más alertas de las que puede revisar una por una.
+          </p>
+        </div>
+      </div>
+      <div class="barra-estado">
+        <span id="proveedor" class="pill pill-proveedor desconocido" title="Proveedor de modelo configurado en mvp/.env">
+          <span class="pill-texto">Modelo: consultando…</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- 2. Aviso de datos sinteticos. -->
+    <p class="aviso-datos" role="note">
+      <strong>Datos sintéticos de demostración.</strong> Los findings están anonimizados y el
+      inventario, el historial de patrones y el catálogo CISA KEV / EPSS son locales y ficticios.
+    </p>
+  </header>
+
+  <main class="tablero">
+    <!-- 3. Los identificadores de finding disponibles, clicables. -->
+    <aside class="panel panel-findings" aria-labelledby="titulo-findings">
+      <div class="panel-cabecera">
+        <h2 id="titulo-findings">Findings</h2>
+        <span id="contador-findings" class="contador" aria-label="Número de findings"></span>
+      </div>
+      <p class="panel-ayuda">
+        Haz clic en un finding para preparar la consulta en el cuadro de texto, o pulsa
+        <b>Ejecutar</b> para lanzar el triage directamente.
+      </p>
+
+      <div id="grupos-findings" class="grupos">
+        <p class="estado-lista">Cargando findings…</p>
+      </div>
+
+      <details class="leyenda">
+        <summary>¿Qué significa cada decisión?</summary>
+        <ul>
+          <li><span class="punto punto-alert"></span><span><b>alert_and_document</b>Se escala a SecOps y se documenta. Nunca se suprime.</span></li>
+          <li><span class="punto punto-manual"></span><span><b>manual_review</b>Un analista tiene que mirarlo antes de decidir.</span></li>
+          <li><span class="punto punto-supr"></span><span><b>candidate_for_suppression</b>Ruido conocido en un entorno no productivo; se propone suprimir. Es una propuesta, nunca una ejecución.</span></li>
+          <li><span class="punto punto-fuera"></span><span><b>out_of_scope</b>No es un finding de GuardDuty ni de Inspector. No se consulta al modelo.</span></li>
+        </ul>
+      </details>
+    </aside>
+
+    <section class="panel panel-conversacion" aria-labelledby="titulo-conversacion">
+      <div class="panel-cabecera">
+        <h2 id="titulo-conversacion">Triage</h2>
+        <button id="limpiar" type="button" class="boton-texto" hidden>Limpiar</button>
+      </div>
+
+      <!-- 4. Historial de mensajes. -->
+      <div id="historial" class="historial" role="log" aria-live="polite" tabindex="-1">
+        <div class="vacio" id="plantilla-vacio">
+          <div class="vacio-icono" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
+            </svg>
+          </div>
+          <h3>Así funciona</h3>
+          <ol>
+            <li><b>Elige un finding</b> de la lista. La consulta se prepara en el cuadro de abajo: pulsa Enviar, o Ejecutar en la tarjeta para ir directo.</li>
+            <li><b>La herramienta lo normaliza</b>, consulta el inventario y el historial del patrón, y pide una clasificación al modelo.</li>
+            <li><b>El motor de política decide.</b> Aquí verás la decisión, el nivel de riesgo y los motivos.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- 5. Campo de texto y boton de enviar. -->
+      <form id="formulario" class="compositor" autocomplete="off">
+        <label class="visualmente-oculto" for="pregunta">Tu consulta</label>
+        <textarea id="pregunta" name="pregunta" rows="1"
+                  placeholder="Escribe una consulta o elige un finding de la lista…"></textarea>
+        <button id="enviar" type="submit" class="boton-primario">
+          <span>Enviar</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
+        </button>
+      </form>
+      <p class="nota-pie">
+        La decisión la toma un motor de política determinista. El agente solo consulta la
+        herramienta de triage y reporta el resultado: no clasifica findings ni asigna riesgo.
+      </p>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

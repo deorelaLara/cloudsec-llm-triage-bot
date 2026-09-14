@@ -1,0 +1,79 @@
+{
+  "ok": true,
+  "decision": "manual_review",
+  "finding": {
+    "finding_id": "arn:aws:inspector2:us-east-1:123456789012:finding/medium-dev-001",
+    "source": "inspector",
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "severity": "medium",
+    "title": "Medium package vulnerability on development container image",
+    "description": "A medium severity package vulnerability affects a development image. The package is not directly internet exposed.",
+    "finding_type": "Software and Configuration Checks/Package Vulnerability",
+    "resource_id": "sha256:devimage1234567890",
+    "resource_type": "AWS_ECR_CONTAINER_IMAGE",
+    "environment": "dev"
+  },
+  "enrichment": {
+    "cve_id": "CVE-2026-54321",
+    "in_cisa_kev": false,
+    "epss_score": 0.00131,
+    "source": "kev_epss"
+  },
+  "llm_analysis": {
+    "summary": "A medium severity package vulnerability (CVE-2026-54321) was detected in a development container image that is not directly exposed to the internet.",
+    "risk_level": "medium",
+    "confidence": 0.9,
+    "rationale": "The vulnerability is medium severity and affects a development environment container image. The image is not directly internet exposed, which reduces the immediate risk of exploitation. However, development environments can be a source of vulnerabilities if images are later promoted to production or if the environment is accessed by unauthorized users. Therefore, the risk is not low and warrants attention.",
+    "indicators": [
+      "Medium severity package vulnerability",
+      "Development container image",
+      "Not directly internet exposed"
+    ],
+    "recommended_action": "Review the vulnerability details and apply available patches or updates to the affected package in the development container image. Ensure that the development environment is properly isolated and access-controlled. Monitor for any promotion of this image to production and reassess risk accordingly.",
+    "suppression_candidate": false,
+    "finding_tags": [
+      "package-vulnerability",
+      "development-environment",
+      "medium-severity"
+    ]
+  },
+  "policy_decision": {
+    "decision": "manual_review",
+    "candidate_for_suppression": false,
+    "final_risk_level": "medium",
+    "reason_codes": [
+      "only_low_risk_can_be_suppressed"
+    ],
+    "recommended_action": "Document the finding and require analyst validation."
+  },
+  "resource_context": {
+    "resource_id": "sha256:devimage1234567890",
+    "encontrado": true,
+    "environment": "dev",
+    "tags": {
+      "Environment": "dev",
+      "Owner": "app-team",
+      "Servicio": "build-pipeline"
+    },
+    "expuesto_internet": false,
+    "criticidad": "medium"
+  },
+  "pattern_history": {
+    "finding_type": "Software and Configuration Checks/Package Vulnerability",
+    "resource_id": "sha256:devimage1234567890",
+    "ventana_dias": 30,
+    "ocurrencias": 0,
+    "puertos_observados": [],
+    "origenes_observados": [],
+    "ultima_vez": null,
+    "patron_recurrente": false,
+    "variacion_detectada": false,
+    "variaciones": []
+  },
+  "llamadas_al_modelo": 1,
+  "registro_id": 31,
+  "fuente": "Samples sinteticos de GuardDuty e Inspector en mvp/data/samples/",
+  "proveedor_modelo": "OpenAI · gpt-4.1-mini",
+  "advertencia": "Datos sinteticos de demostracion. Los findings estan anonimizados y el inventario, el historial y el catalogo KEV/EPSS son locales."
+}

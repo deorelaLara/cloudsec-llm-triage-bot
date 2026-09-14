@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "error": "No existe ningun finding con identificador 'finding-que-no-existe-xyz' entre los samples de demostracion. Disponibles: 32abc34d567e8fa901bc234d567ef892, 12abc34d567e8fa901bc234d567ef890, 22abc34d567e8fa901bc234d567ef891, 42abc34d567e8fa901bc234d567ef893, arn:aws:inspector2:us-east-1:123456789012:finding/critical-cve-001, arn:aws:inspector2:us-east-1:123456789012:finding/medium-dev-001, evt-unsupported-001.",
+  "advertencia": "Datos sinteticos de demostracion. Los findings estan anonimizados y el inventario, el historial y el catalogo KEV/EPSS son locales."
+}

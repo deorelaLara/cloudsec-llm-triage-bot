@@ -1,0 +1,81 @@
+{
+  "ok": true,
+  "decision": "alert_and_document",
+  "finding": {
+    "finding_id": "12abc34d567e8fa901bc234d567ef890",
+    "source": "guardduty",
+    "account_id": "123456789012",
+    "region": "us-east-1",
+    "severity": "high",
+    "title": "UnauthorizedAccess:IAMUser/AnomalousBehavior",
+    "description": "Potential credential compromise detected for an IAM user exhibiting anomalous behavior from a suspicious IP.",
+    "finding_type": "CredentialAccess:IAMUser/AnomalousBehavior",
+    "resource_id": "AKIAEXAMPLE1234",
+    "resource_type": "AccessKey",
+    "environment": "unknown"
+  },
+  "enrichment": {
+    "cve_id": null,
+    "in_cisa_kev": false,
+    "epss_score": null,
+    "source": "none"
+  },
+  "llm_analysis": {
+    "summary": "GuardDuty detected potential credential compromise for an IAM user due to anomalous behavior from a suspicious IP address, indicating possible unauthorized access.",
+    "risk_level": "high",
+    "confidence": 0.9,
+    "rationale": "The finding is from GuardDuty, a reliable AWS threat detection service, reporting anomalous behavior linked to an IAM user's access key from a suspicious IP. This strongly suggests potential credential compromise and unauthorized access risk. The severity score of 8.6 further supports a high risk level. Immediate investigation and remediation are advised to prevent potential data breaches or further unauthorized activity.",
+    "indicators": [
+      "Anomalous behavior detected",
+      "Suspicious IP address",
+      "IAM user access key involved",
+      "High severity score (8.6)"
+    ],
+    "recommended_action": "Immediately investigate the IAM user's recent activity and the suspicious IP address. Consider rotating the compromised access key, enforcing multi-factor authentication (MFA), and reviewing IAM policies and CloudTrail logs for unauthorized actions. Enhance monitoring for further suspicious activity.",
+    "suppression_candidate": false,
+    "finding_tags": [
+      "credential_compromise",
+      "iam_user",
+      "anomalous_behavior",
+      "guardduty",
+      "high_severity"
+    ]
+  },
+  "policy_decision": {
+    "decision": "alert_and_document",
+    "candidate_for_suppression": false,
+    "final_risk_level": "high",
+    "reason_codes": [
+      "risk_level_blocked"
+    ],
+    "recommended_action": "Escalate immediately. Suppression is forbidden for high or critical risk findings."
+  },
+  "resource_context": {
+    "resource_id": "AKIAEXAMPLE1234",
+    "encontrado": true,
+    "environment": "production",
+    "tags": {
+      "Owner": "platform-team",
+      "Servicio": "billing-api"
+    },
+    "expuesto_internet": true,
+    "criticidad": "critical"
+  },
+  "pattern_history": {
+    "finding_type": "CredentialAccess:IAMUser/AnomalousBehavior",
+    "resource_id": "AKIAEXAMPLE1234",
+    "ventana_dias": 30,
+    "ocurrencias": 0,
+    "puertos_observados": [],
+    "origenes_observados": [],
+    "ultima_vez": null,
+    "patron_recurrente": false,
+    "variacion_detectada": false,
+    "variaciones": []
+  },
+  "llamadas_al_modelo": 1,
+  "registro_id": 26,
+  "fuente": "Samples sinteticos de GuardDuty e Inspector en mvp/data/samples/",
+  "proveedor_modelo": "OpenAI · gpt-4.1-mini",
+  "advertencia": "Datos sinteticos de demostracion. Los findings estan anonimizados y el inventario, el historial y el catalogo KEV/EPSS son locales."
+}

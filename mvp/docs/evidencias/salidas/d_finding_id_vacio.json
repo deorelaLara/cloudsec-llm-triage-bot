@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "error": "No se indico ningun finding_id. Pide al usuario el identificador del finding que quiere revisar.",
+  "advertencia": "Datos sinteticos de demostracion. Los findings estan anonimizados y el inventario, el historial y el catalogo KEV/EPSS son locales."
+}

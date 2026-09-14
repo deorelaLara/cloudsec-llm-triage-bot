@@ -1,0 +1,7 @@
+{
+  "http": 200,
+  "cuerpo": {
+    "ok": true,
+    "respuesta": "decision: alert_and_document\nfinal_risk_level: high\nreason_codes: risk_level_blocked\nrecommended_action: Escalate immediately. Suppression is forbidden for high or critical risk findings.\n\nEl finding 12abc34d567e8fa901bc234d567ef890 es un evento de GuardDuty que indica un posible compromiso de credenciales para un usuario IAM debido a un comportamiento anómalo desde una IP sospechosa. El recurso afectado es una clave de acceso (AccessKey) en un entorno de producción, expuesto a internet y con criticidad crítica. No se han detectado patrones recurrentes en los últimos 30 días. Se recomienda investigar inmediatamente la actividad del usuario IAM y la IP sospechosa, rotar la clave comprometida, revisar permisos y habilitar MFA si no está activo. Estos datos son sintéticos de demostración."
+  }
+}
