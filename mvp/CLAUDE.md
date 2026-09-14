@@ -127,8 +127,9 @@ Ademas:
   de alcance.
 - Un `POST` real a `/api/chat` con `curl` devuelve respuesta.
 - `python verificar.py` reproduce a, b, c, d, f y el POST con los servidores levantados;
-  `--caso e` con el 8001 apagado; `--todos-los-samples --guardar docs/evidencias/salidas`
-  deja las respuestas JSON como evidencia.
+  `--caso e` con el 8001 apagado; `--fuera-de-guion` envia preguntas que el agente no
+  debe contestar; `--todos-los-samples --guardar docs/evidencias/salidas` deja las
+  respuestas JSON como evidencia.
 
 ## Honestidad en la verificacion
 
